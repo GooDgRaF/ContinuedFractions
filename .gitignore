@@ -1,0 +1,9 @@
+**/obj/**
+**/bin/**
+
+*.DotSettings
+*.user
+*.DotSettings.user
+
+**/.idea/**
+**/.vscode/**
