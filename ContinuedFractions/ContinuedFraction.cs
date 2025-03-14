@@ -100,7 +100,7 @@ public readonly partial struct ContinuedFraction {
       if (quotient < int.MinValue || quotient > int.MaxValue) {
         throw new OverflowException("Coefficient is out of range for int.");
       }
-      
+
       yield return (int)quotient;
 
       numerator   = denominator;
