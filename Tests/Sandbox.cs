@@ -6,7 +6,7 @@ public class Sandbox {
 
   public static void Main() {
 
-    Console.WriteLine($"{ContinuedFraction.E().FromCF().ElementAt(5)}");
+    Console.WriteLine($"{ContinuedFraction.E().kConvergentMatrix().ElementAt(5)}");
   }
 
 }
