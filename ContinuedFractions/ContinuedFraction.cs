@@ -13,10 +13,21 @@ public readonly partial struct ContinuedFraction {
 
   private ContinuedFraction(IEnumerable<int> cf) { _kConvergent = cf; }
 
+  public IEnumerable<(BigInteger numerator, BigInteger denominator)> FromCF() => FromCF(_kConvergent);
+
+  public IEnumerable<Matrix22> kConvergentMatrix() {
+    Matrix22 res = Matrix22.Id();
+
+    foreach (int kC in _kConvergent) {
+      res *= Matrix22.Homographic(kC);
+      yield return res;
+    }
+  }
+
+#region Factories
   public static ContinuedFraction FromRational(BigInteger numerator, BigInteger denominator)
     => new(RationalGenerator(numerator, denominator));
-
-  public IEnumerable<(BigInteger numerator, BigInteger denominator)> FromCF() => FromCF(_kConvergent);
+#endregion
 
 #region Overrides
   public override string ToString() {
@@ -63,7 +74,6 @@ public readonly partial struct ContinuedFraction {
   }
 #endregion
 
-
 #region Static
   private static IEnumerable<(BigInteger numerator, BigInteger denominator)> FromCF(IEnumerable<int> kConvergent) {
     BigInteger p1 = 1;
@@ -90,7 +100,7 @@ public readonly partial struct ContinuedFraction {
       if (quotient < int.MinValue || quotient > int.MaxValue) {
         throw new OverflowException("Coefficient is out of range for int.");
       }
-
+      
       yield return (int)quotient;
 
       numerator   = denominator;
