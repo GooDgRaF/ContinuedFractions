@@ -8,6 +8,7 @@
     </PropertyGroup>
     <ItemGroup>
         <ProjectReference Include="..\ContinuedFractions\ContinuedFractions.csproj"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0"/>
+        <PackageReference Include="NUnit" Version="4.3.2"/>
     </ItemGroup>
-
 </Project>
