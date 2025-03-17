@@ -7,7 +7,11 @@ public readonly struct Matrix22 : IAdditionOperators<Matrix22, Matrix22, Matrix2
 
   private readonly int[] _m;
 
-  public Matrix22(int a11, int a12, int a21, int a22) { _m = new[] { a11, a12, a21, a22 }; }
+  public int this[int i] => _m[i];
+
+  public Matrix22(int a11, int a12, int a21, int a22) {
+    _m = new[] { a11, a12, a21, a22 };
+  }
 
   public static Matrix22 Homographic(int a11) => new Matrix22(a11, 1, 1, 0);
 
