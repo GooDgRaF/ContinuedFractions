@@ -13,6 +13,8 @@ public readonly partial struct ContinuedFraction {
 
   private readonly IEnumerable<int> _cf;
 
+  private readonly List<int> _cfCashed = new List<int>();
+
   public ContinuedFraction(IEnumerable<int> cf) { _cf = cf; }
 
   public IEnumerable<(BigInteger numerator, BigInteger denominator)> FromCF() => FromCF(_cf);
@@ -28,6 +30,7 @@ public readonly partial struct ContinuedFraction {
 
       foreach ((int q, Matrix22 r) gcd in GCD(m)) {
         m = gcd.r;
+
         yield return gcd.q;
       }
     }
@@ -90,13 +93,13 @@ public readonly partial struct ContinuedFraction {
 #endregion
 
 #region Static
-  private static IEnumerable<(BigInteger numerator, BigInteger denominator)> FromCF(IEnumerable<int> kConvergent) {
+  private static IEnumerable<(BigInteger numerator, BigInteger denominator)> FromCF(IEnumerable<int> cf) {
     BigInteger p1 = 1;
     BigInteger p0 = 0;
     BigInteger q1 = 0;
     BigInteger q0 = 1;
 
-    foreach (int coeff in kConvergent) {
+    foreach (int coeff in cf) {
       BigInteger p = coeff * p1 + p0;
       BigInteger q = coeff * q1 + q0;
 
