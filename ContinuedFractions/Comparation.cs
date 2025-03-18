@@ -5,7 +5,7 @@ public readonly partial struct ContinuedFraction : IComparable<ContinuedFraction
   private const int comparationCut = 100;
 
 
-  public int CompareTo(ContinuedFraction other) {
+  public int CompareTo(ContinuedFraction other) { // A < B <==> lexmin([a0;-a1,a2,-a3,...,a2k,-a(2k+1),...], [b0;-b1,b2,-b3,...,b2k,-b(2k+1),...])
     int i = 0;
     while (i < comparationCut) {
       int val1 = this[i];
