@@ -4,7 +4,7 @@ using NUnit.Framework;
 namespace Tests;
 
 [TestFixture]
-public class OperatorTests {
+public class ArithmeticTests {
 
   public static ContinuedFraction cfFin1 = new ContinuedFraction(new int[] { 1, 2, 3 }); // 10 / 7
 
