@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Diagnostics;
 using System.Numerics;
 using System.Text;
 using System.Diagnostics.CodeAnalysis;
@@ -7,38 +8,81 @@ using System.Diagnostics.CodeAnalysis;
 namespace ContinuedFractions;
 
 /// <summary>
-/// Lazy continued fractions of arbitrary lenght
+/// Lazy continued fractions of the maximal int.MaxValue length [ :( ]
 /// </summary>
 public readonly partial struct ContinuedFraction {
 
-  private readonly IEnumerable<int> _cf;
+  private readonly IEnumerator<int> _cfEnumerator;
 
   private readonly List<int> _cfCashed = new List<int>();
 
-  public ContinuedFraction(IEnumerable<int> cf) { _cf = cf; }
+  private bool CacheUpToIndex(int i) {
+    while (_cfCashed.Count <= i) {
+      if (!_cfEnumerator.MoveNext()) {
+        return false;
+      }
+      _cfCashed.Add(_cfEnumerator.Current); // Добавляем следующий элемент в кэш
+    }
 
-  public IEnumerable<(BigInteger numerator, BigInteger denominator)> FromCF() => FromCF(_cf);
+    return true;
+  }
+
+  public int this[int i] { // -1 означает, что непрерывная дробь закончилась
+    get
+      {
+        Debug.Assert(i >= 0, $"Index should be non negative. Found: i = {i}");
+
+        if (_cfCashed.Count > i) {
+          return _cfCashed[i];
+        }
+
+        return CacheUpToIndex(i) ? _cfCashed[i] : -1;
+      }
+  }
+
+  public List<int> Take(int n) {
+    if (_cfCashed.Count > n) {
+      return _cfCashed[..n];
+    }
+
+    return CacheUpToIndex(n - 1) ? _cfCashed[..n] : _cfCashed[.._cfCashed.Count];
+  }
+
+
+  public ContinuedFraction(IEnumerable<int> cf) {
+    _cfEnumerator = cf.GetEnumerator();
+    // _cfCashed.Capacity = 128;
+  }
+
+  public IEnumerable<(BigInteger numerator, BigInteger denominator)> FromCF() => FromCF(_cfCashed);
 
   private static Matrix22 LFT_step(Matrix22 m, int a) => m * Matrix22.Homographic(a);
 
   public ContinuedFraction CF_transform(Matrix22 init) => new ContinuedFraction(CF_transform_main(init));
 
-  public IEnumerable<int> CF_transform_main(Matrix22 init) { // todo: IEnumerable<(int b, Matrix22 hfunc)>
+  public IEnumerable<int> CF_transform_main(Matrix22 init) {
     Matrix22 m = init;
-    foreach (int a in _cf) {
-      m = LFT_step(m, a);
+    int      i = 0;
 
+    while (true) {
+      int val = this[i];
+      if (val == -1) {
+        break;
+      }
+      m = LFT_step(m, val);
       foreach ((int q, Matrix22 r) gcd in GCD(m)) {
         m = gcd.r;
 
         yield return gcd.q;
       }
+
+      i++;
     }
 
     // Если исходная непрерывная дробь была конечной, то надо выполнить ещё раз алгоритм Евклида.
     if (m[2] != 0) {
-      foreach (int i in GCD(m[0], m[2]))
-        yield return i;
+      foreach (int k in GCD(m[0], m[2]))
+        yield return k;
     }
   }
 
@@ -52,7 +96,7 @@ public readonly partial struct ContinuedFraction {
     StringBuilder res = new StringBuilder("[");
 
     // Берем только до 40 элементов для отображения: чтобы по абсолютной точности соответствовать типу double
-    var elementsToString = _cf.Take(41).ToList();
+    var elementsToString = Take(41);
 
     if (elementsToString.Count == 0) {
       return res.Append(']').ToString();
