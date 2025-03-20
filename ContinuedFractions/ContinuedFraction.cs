@@ -10,11 +10,12 @@ namespace ContinuedFractions;
 /// <summary>
 /// Lazy continued fractions of the maximal int.MaxValue length [ :( ]
 /// </summary>
-public readonly partial struct ContinuedFraction {
+public readonly partial struct CFraction {
 
-  private readonly IEnumerator<int> _cfEnumerator;
+#region Data and Constructors
+  private readonly IEnumerator<int> _cfEnumerator; // "Правило" для получения следующего коэффициента бесконечной дроби
+  private readonly List<int>        _cfCashed;     // Конечные непрерывные дроби лежат тут целиком
 
-  private readonly List<int> _cfCashed = new List<int>();
 
   private bool CacheUpToIndex(int i) {
     while (_cfCashed.Count <= i) {
@@ -27,7 +28,23 @@ public readonly partial struct ContinuedFraction {
     return true;
   }
 
-  public int this[int i] { // -1 означает, что непрерывная дробь закончилась
+  private CFraction(List<int> cf) {
+    _cfCashed     = cf;
+    _cfEnumerator = new List<int>().GetEnumerator();
+  }
+
+  private CFraction(IEnumerable<int> cf) {
+    _cfEnumerator = cf.GetEnumerator();
+    _cfCashed     = new List<int>();
+  }
+#endregion
+
+#region Properties
+  // public bool IsFinite { get; private set; }; // у readonly структур не может быть set-полей.
+#endregion
+
+#region TakeRegion
+  public int? this[int i] {
     get
       {
         Debug.Assert(i >= 0, $"Index should be non negative. Found: i = {i}");
@@ -36,59 +53,41 @@ public readonly partial struct ContinuedFraction {
           return _cfCashed[i];
         }
 
-        return CacheUpToIndex(i) ? _cfCashed[i] : -1;
+        if (CacheUpToIndex(i)) {
+          return _cfCashed[i];
+        }
+        if (_cfCashed.Count == i || _cfCashed.Count == 0) {
+          return null;
+        }
+
+        throw new IndexOutOfRangeException
+          ($"The given index i = {i} is out of boundaries of the cf. It's length is {_cfCashed.Count}");
       }
   }
 
   public List<int> Take(int n) {
-    if (_cfCashed.Count > n) {
+    if (_cfCashed.Count >= n) {
       return _cfCashed[..n];
     }
 
     return CacheUpToIndex(n - 1) ? _cfCashed[..n] : _cfCashed[.._cfCashed.Count];
   }
-
-
-  public ContinuedFraction(IEnumerable<int> cf) {
-    _cfEnumerator = cf.GetEnumerator();
-    // _cfCashed.Capacity = 128;
-  }
-
-  public IEnumerable<(BigInteger numerator, BigInteger denominator)> FromCF() => FromCF(_cfCashed);
-
-  private static Matrix22 LFT_step(Matrix22 m, int a) => m * Matrix22.Homographic(a);
-
-  public ContinuedFraction CF_transform(Matrix22 init) => new ContinuedFraction(CF_transform_main(init));
-
-  public IEnumerable<int> CF_transform_main(Matrix22 init) {
-    Matrix22 m = init;
-    int      i = 0;
-
-    while (true) {
-      int val = this[i];
-      if (val == -1) {
-        break;
-      }
-      m = LFT_step(m, val);
-      foreach ((int q, Matrix22 r) gcd in GCD(m)) {
-        m = gcd.r;
-
-        yield return gcd.q;
-      }
-
-      i++;
-    }
-
-    // Если исходная непрерывная дробь была конечной, то надо выполнить ещё раз алгоритм Евклида.
-    if (m[2] != 0) {
-      foreach (int k in GCD(m[0], m[2]))
-        yield return k;
-    }
-  }
+#endregion
 
 #region Factories
-  public static ContinuedFraction FromRational(BigInteger numerator, BigInteger denominator)
+  public static CFraction FromRational(BigInteger numerator, BigInteger denominator)
     => new(RationalGenerator(numerator, denominator));
+
+  public static CFraction FromCoeffs(IList<int> cf) {
+    List<int> r = cf.ToList();
+    if (r.Skip(1).Any(c => c == 0)) {
+      throw new ArgumentException("There should be no zeros among coefficients (after the first one) of the continued function!");
+    }
+
+    return new CFraction(cf);
+  }
+
+  public static CFraction FromGenerator(IEnumerable<int> cf) => new CFraction(cf);
 #endregion
 
 #region Overrides
@@ -137,25 +136,6 @@ public readonly partial struct ContinuedFraction {
 #endregion
 
 #region Static
-  private static IEnumerable<(BigInteger numerator, BigInteger denominator)> FromCF(IEnumerable<int> cf) {
-    BigInteger p1 = 1;
-    BigInteger p0 = 0;
-    BigInteger q1 = 0;
-    BigInteger q0 = 1;
-
-    foreach (int coeff in cf) {
-      BigInteger p = coeff * p1 + p0;
-      BigInteger q = coeff * q1 + q0;
-
-      yield return (p, q);
-
-      p0 = p1;
-      p1 = p;
-      q0 = q1;
-      q1 = q;
-    }
-  }
-
   private static IEnumerable<int> RationalGenerator(BigInteger numerator, BigInteger denominator) {
     while (denominator != 0) {
       BigInteger quotient = BigInteger.DivRem(numerator, denominator, out BigInteger remainder);
@@ -167,72 +147,6 @@ public readonly partial struct ContinuedFraction {
 
       numerator   = denominator;
       denominator = remainder;
-    }
-  }
-
-  private static bool GCD_step(Matrix22 m, [NotNullWhen(true)] out int? q, [NotNullWhen(true)] out Matrix22? r) {
-    if (m[2] == 0 && m[3] == 0) {
-      throw new ArgumentException($"GCD_step: That series has already ended. Found: the second row of matrix is zero.");
-    }
-
-    q = null;
-    r = null;
-
-    if (m[2] == 0 || m[3] == 0) { // Функция неограниченна, недостаточно информации для определения частного
-      return false;
-    }
-
-    if (m[2] != 0 && m[3] < 0) { // Есть ноль в области определения
-      return false;
-    }
-
-    // Функция ограничена
-    double n0 = (double)m[0] / m[2];
-    double n1 = (double)m[1] / m[3];
-
-    double v0 = Math.Min(n0, n1);
-    double v1 = Math.Max(n0, n1);
-
-    int d0 = (int)Math.Floor(v0);
-    int d1 = (int)Math.Floor(v1);
-
-    // если d1 == d0, то частное определяется однозначно,
-    // если d1 отличается больше чем на 1 от d0, то ничего определённого сказать нельзя
-    // если d1 == d0 + 1 и d1 == v1, то эта граница достигается только либо в 0, либо в oo; поэтому ответ d0.
-    if (d1 == d0 || (d1 == d0 + 1 && Math.Abs(d1 - v1) < 1e-14)) {
-      q = d0;
-      r = new Matrix22(m[2], m[3], m[0] - d0 * m[2], m[1] - d0 * m[3]);
-
-      return true;
-    }
-
-    return false;
-  }
-
-  private static IEnumerable<int> GCD(int a, int b) {
-    while (b != 0) {
-      int q = Math.DivRem(a, b, out int r);
-
-      yield return q;
-
-      a = b;
-      b = r;
-    }
-  }
-
-  public static IEnumerable<(int q, Matrix22 r)> GCD(Matrix22 m) {
-    while (true) {
-      if (m[0] == 0 && m[1] == 0) { // числитель равен нулю
-        break;
-      }
-
-      if (!GCD_step(m, out int? q, out Matrix22? r)) {
-        break;
-      }
-
-      yield return ((int)q, (Matrix22)r);
-
-      m = (Matrix22)r;
     }
   }
 #endregion

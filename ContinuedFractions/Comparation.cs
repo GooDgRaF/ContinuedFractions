@@ -1,25 +1,25 @@
 ﻿namespace ContinuedFractions;
 
-public readonly partial struct ContinuedFraction : IComparable<ContinuedFraction>, IEquatable<ContinuedFraction> {
+public readonly partial struct CFraction : IComparable<CFraction>, IEquatable<CFraction> {
 
   private const int comparationCut = 100;
 
 
-  public int CompareTo(ContinuedFraction other) { // A < B <==> lexmin([a0;-a1,a2,-a3,...,a2k,-a(2k+1),...], [b0;-b1,b2,-b3,...,b2k,-b(2k+1),...])
+  public int CompareTo(CFraction other) { // A < B <==> lexmin([a0;-a1,a2,-a3,...,a2k,-a(2k+1),...], [b0;-b1,b2,-b3,...,b2k,-b(2k+1),...])
     int i = 0;
     while (i < comparationCut) {
-      int val1 = this[i];
-      int val2 = other[i];
+      int? val1 = this[i];
+      int? val2 = other[i];
 
-      if (val1 == -1 && val2 == -1) {
+      if (val1 == null && val2 == null) {
         return 0;
       }
 
-      if (val2 == -1) { // cf_other закончилась раньше
+      if (val2 == null) { // cf_other закончилась раньше
         return (i % 2 == 0) ? -1 : 1;
       }
 
-      if (val1 == -1) { // cf_this закончилась раньше
+      if (val1 == null) { // cf_this закончилась раньше
         return (i % 2 == 0) ? 1 : -1;
       }
 
@@ -42,13 +42,13 @@ public readonly partial struct ContinuedFraction : IComparable<ContinuedFraction
     return 0;
   }
 
-  public bool Equals(ContinuedFraction other) => this.CompareTo(other) == 0;
+  public bool Equals(CFraction other) => this.CompareTo(other) == 0;
 
-  public static bool operator ==(ContinuedFraction left, ContinuedFraction right) { return left.Equals(right); }
+  public static bool operator ==(CFraction left, CFraction right) { return left.Equals(right); }
 
-  public static bool operator !=(ContinuedFraction left, ContinuedFraction right) { return !(left == right); }
+  public static bool operator !=(CFraction left, CFraction right) { return !(left == right); }
 
-  public override bool Equals(object? obj) { return obj is ContinuedFraction other && Equals(other); }
+  public override bool Equals(object? obj) { return obj is CFraction other && Equals(other); }
 
   public override int GetHashCode() { // можно договориться, что кэш берём с первых 40 элементов
     throw new NotImplementedException();
