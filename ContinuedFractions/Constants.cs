@@ -1,9 +1,10 @@
 ﻿namespace ContinuedFractions;
 
-public partial struct ContinuedFraction {
+public partial struct CFraction {
 
-  public static ContinuedFraction E() => new ContinuedFraction(EGenerator());
-  public static ContinuedFraction Sqrt2() => new ContinuedFraction(Sqrt2Generator());
+  public static readonly CFraction E     = new CFraction(EGenerator());
+  public static readonly CFraction Sqrt2 = new CFraction(Sqrt2Generator());
+  public static readonly CFraction Infinity = new CFraction(Array.Empty<int>());
 
 
   private static IEnumerable<int> EGenerator() {
