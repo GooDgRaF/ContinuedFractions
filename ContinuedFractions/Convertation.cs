@@ -9,10 +9,9 @@ namespace ContinuedFractions;
 
 public readonly partial struct CFraction
 {
-  public IEnumerable<(BigInteger numerator, BigInteger denominator)> FromCF() => FromCF(_cfCashed);
+  public IEnumerable<(BigInteger numerator, BigInteger denominator)> ToRational() => ToRational(_cfCashed);
 
-
-      private static IEnumerable<(BigInteger numerator, BigInteger denominator)> FromCF(IEnumerable<int> cf) {
+      private static IEnumerable<(BigInteger numerator, BigInteger denominator)> ToRational(IEnumerable<int> cf) {
         BigInteger p1 = 1;
         BigInteger p0 = 0;
         BigInteger q1 = 0;
