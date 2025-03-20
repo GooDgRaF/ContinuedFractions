@@ -7,17 +7,33 @@ public readonly partial struct CFraction :
   // IUnaryNegationOperators<CFraction, CFraction> ,
   IUnaryPlusOperators<CFraction, CFraction> {
 
+  private static readonly int[] zeroForRcp = new int[] { 0 };
+
+  public CFraction Rcp() {
+    switch (this[0]) {
+      case null: return FromRational(0, 1); // 1/inf --> 0
+      case 0:    return FromGenerator(_cfEnumerable.Skip(1)); // 1/[0;a0,a1,..] --> [a0;a1,...]
+      case > 0:  return FromGenerator(zeroForRcp.Concat(_cfEnumerable)); // 1/[a0;a1,...] --> [0;a0,a1,..]
+      default:   throw new NotImplementedException("я хз что делать с отрицательными числами пока что");
+    }
+  }
+
   public static CFraction operator +(CFraction value) => value;
 
   // public static CFraction operator -(CFraction value) { // хз что это такое пока что
   //   throw new NotImplementedException();
   // }
 
-  public static CFraction operator +(CFraction cf, Frac frac) => cf.CF_transform(new Matrix22(frac.q, frac.p, 0, frac.q));
+  public static CFraction operator +(CFraction cf,   Frac      frac) => cf.CF_transform(new Matrix22(frac.q, frac.p, 0, frac.q));
+  public static CFraction operator +(Frac      frac, CFraction cf)   => cf + frac;
 
-  public static CFraction operator +(Frac frac, CFraction cf) => cf + frac;
+
+  public static CFraction operator *(CFraction cf,   Frac      frac) => cf.CF_transform(new Matrix22(frac.p, 0, 0, frac.q));
+  public static CFraction operator *(Frac      frac, CFraction cf)   => cf * frac;
 
 
+  public static CFraction operator /(CFraction cf,   Frac      frac) => cf.CF_transform(new Matrix22(frac.q, 0, 0, frac.p));
+  public static CFraction operator /(Frac      frac, CFraction cf)   => cf / frac;
 
 
   public CFraction CF_transform(Matrix22 init) => new CFraction(CF_transform_main(init));
