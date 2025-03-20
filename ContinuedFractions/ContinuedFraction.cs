@@ -13,6 +13,7 @@ namespace ContinuedFractions;
 public readonly partial struct CFraction {
 
 #region Data and Constructors
+  private readonly IEnumerable<int> _cfEnumerable; // "Генератор" правил
   private readonly IEnumerator<int> _cfEnumerator; // "Правило" для получения следующего коэффициента бесконечной дроби
   private readonly List<int>        _cfCashed;     // Конечные непрерывные дроби лежат тут целиком
 
@@ -30,10 +31,12 @@ public readonly partial struct CFraction {
 
   private CFraction(List<int> cf) {
     _cfCashed     = cf;
-    _cfEnumerator = new List<int>().GetEnumerator();
+    _cfEnumerable = new List<int>();
+    _cfEnumerator = _cfEnumerable.GetEnumerator();
   }
 
   private CFraction(IEnumerable<int> cf) {
+    _cfEnumerable = cf;
     _cfEnumerator = cf.GetEnumerator();
     _cfCashed     = new List<int>();
   }
