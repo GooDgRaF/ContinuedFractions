@@ -1,148 +1,163 @@
 ﻿using System.Numerics;
-using NUnit.Framework.Legacy; // For SequenceEqual
 
-namespace Tests
-{
-    [TestFixture]
-    public class CFractionFactoryTests
-    {
-        [Test]
-        public void FromRational_PositiveFraction_CorrectCoeffs()
-        {
-            BigInteger numerator = 22;
-            BigInteger denominator = 7;
-            List<int> expectedCoeffs = new List<int> { 3, 7 };
+namespace Tests;
 
-            CFraction fraction = CFraction.FromRational(numerator, denominator);
-            List<int> actualCoeffs = fraction.Take(expectedCoeffs.Count);
+[TestFixture]
+public class FactoryTests {
 
-            CollectionAssert.AreEqual(expectedCoeffs, actualCoeffs, "Coefficients for 22/7 should be [3, 7]");
-        }
+  [Test]
+  public void FromRational_One() {
+    BigInteger numerator      = 1;
+    BigInteger denominator    = 1;
+    List<int>  expectedCoeffs = new List<int> { 1 };
 
-        [Test]
-        public void FromRational_ZeroNumerator_CorrectCoeffs()
-        {
-            BigInteger numerator = 0;
-            BigInteger denominator = 7;
-            List<int> expectedCoeffs = new List<int> { 0 };
+    CFraction fraction     = CFraction.FromRational(numerator, denominator);
+    var       actualCoeffs = fraction.Take(expectedCoeffs.Count);
 
-            CFraction fraction = CFraction.FromRational(numerator, denominator);
-            List<int> actualCoeffs = fraction.Take(expectedCoeffs.Count);
+    Assert.That(actualCoeffs, Is.EqualTo(expectedCoeffs), "Coefficients for 1/1 should be [1]");
+  }
 
-            CollectionAssert.AreEqual(expectedCoeffs, actualCoeffs, "Coefficients for 0/7 should be [0]");
-        }
+  [Test]
+  public void FromRational_ZeroNumerator() {
+    BigInteger numerator      = 0;
+    BigInteger denominator    = 7;
+    List<int>  expectedCoeffs = new List<int> { 0 };
 
-        [Test]
-        public void FromRational_Overflow_ThrowsException()
-        {
-            BigInteger numerator = BigInteger.Pow(int.MaxValue + 1L, 2);
-            BigInteger denominator = 1;
+    CFraction fraction     = CFraction.FromRational(numerator, denominator);
+    var       actualCoeffs = fraction.Take(expectedCoeffs.Count);
 
-            Assert.Throws<OverflowException>(() => CFraction.FromRational(numerator, denominator).Take(1),
-                "Expected OverflowException if coefficient is out of int.MaxValue range");
-        }
+    Assert.That(actualCoeffs, Is.EqualTo(expectedCoeffs), "Coefficients for 0/7 should be [0]");
+  }
 
-        [Test]
-        public void FromCoeffs_ValidCoeffs_CorrectCFraction()
-        {
-            List<int> inputCoeffs = new List<int> { 1, 2, 3, 4 };
-            List<int> expectedCoeffs = inputCoeffs;
+  [Test]
+  public void FromRational_PositiveFraction() {
+    BigInteger numerator      = 22;
+    BigInteger denominator    = 7;
+    List<int>  expectedCoeffs = new List<int> { 3, 7 };
 
-            CFraction fraction = CFraction.FromCoeffs(inputCoeffs);
-            List<int> actualCoeffs = fraction.Take(expectedCoeffs.Count);
+    CFraction fraction     = CFraction.FromRational(numerator, denominator);
+    var       actualCoeffs = fraction.Take(expectedCoeffs.Count);
 
-            CollectionAssert.AreEqual(expectedCoeffs, actualCoeffs, "For valid coefficients, Take() should return the same");
-        }
+    Assert.That(actualCoeffs, Is.EqualTo(expectedCoeffs), "Coefficients for 22/7 should be [3, 7]");
+  }
 
-        [Test]
-        public void FromCoeffs_ZeroInCoeffsAfterFirst_ThrowsException()
-        {
-            List<int> invalidCoeffs = new List<int> { 1, 2, 0, 4 };
+  [Test]
+  public void FromRational_Overflow_ThrowsException() {
+    BigInteger numerator   = BigInteger.Pow(int.MaxValue + 1L, 2);
+    BigInteger denominator = 1;
 
-            Assert.Throws<ArgumentException>(() => CFraction.FromCoeffs(invalidCoeffs),
-                "Expected ArgumentException for zero coefficient after the first one");
-        }
+    Assert.Throws<OverflowException>
+      (
+       () => CFraction.FromRational(numerator, denominator).Take(1)
+     , "Expected OverflowException if coefficient is out of int.MaxValue range"
+      );
+  }
 
-        [Test]
-        public void FromCoeffs_ZeroFirstCoeff_ValidCFraction()
-        {
-            List<int> validCoeffsWithZeroFirst = new List<int> { 0, 2, 3, 4 };
-            List<int> expectedCoeffs = validCoeffsWithZeroFirst;
+  [Test]
+  public void FromCoeffs_ValidCoeffs() {
+    List<int> inputCoeffs    = new List<int> { 1, 2, 3, 4 };
+    List<int> expectedCoeffs = inputCoeffs;
 
-            CFraction fraction = CFraction.FromCoeffs(validCoeffsWithZeroFirst);
-            List<int> actualCoeffs = fraction.Take(expectedCoeffs.Count);
+    CFraction fraction     = CFraction.FromCoeffs(inputCoeffs);
+    var       actualCoeffs = fraction.Take(expectedCoeffs.Count);
 
-            CollectionAssert.AreEqual(expectedCoeffs, actualCoeffs, "Zero as the first coefficient should be valid");
-        }
+    Assert.That(actualCoeffs, Is.EqualTo(expectedCoeffs), "For valid coefficients, Take() should return the same");
+  }
 
-        [Test]
-        public void FromCoeffs_EmptyList_ValidCFraction()
-        {
-            List<int> emptyCoeffs = new List<int>();
-            List<int> expectedCoeffs = emptyCoeffs;
+  [Test]
+  public void FromCoeffs_ZeroInCoeffsAfterFirst_ThrowsException() {
+    List<int> invalidCoeffs = new List<int> { 1, 2, 0, 4 };
 
-            CFraction fraction = CFraction.FromCoeffs(emptyCoeffs);
-            List<int> actualCoeffs = fraction.Take(expectedCoeffs.Count);
+    Assert.Throws<ArgumentException>
+      (() => CFraction.FromCoeffs(invalidCoeffs), "Expected ArgumentException for zero coefficient after the first one");
+  }
 
-            CollectionAssert.AreEqual(expectedCoeffs, actualCoeffs, "Empty coefficients list should be valid (infinity cf)");
-        }
+  [Test]
+  public void FromCoeffs_ZeroFirstCoeff() {
+    List<int> validCoeffsWithZeroFirst = new List<int> { 0, 2, 3, 4 };
+    List<int> expectedCoeffs           = validCoeffsWithZeroFirst;
 
-        [Test]
-        public void FromGenerator_List_CorrectCFraction()
-        {
-            List<int> coeffs = new List<int> { 1, 2, 3 };
-            IEnumerable<int> generator = coeffs;
-            List<int> expectedCoeffs = coeffs;
+    CFraction fraction     = CFraction.FromCoeffs(validCoeffsWithZeroFirst);
+    var       actualCoeffs = fraction.Take(expectedCoeffs.Count);
 
-            CFraction fraction = CFraction.FromGenerator(generator);
-            List<int> actualCoeffs = fraction.Take(expectedCoeffs.Count);
+    Assert.That(actualCoeffs, Is.EqualTo(expectedCoeffs), "Zero as the first coefficient should be valid");
+  }
 
-            CollectionAssert.AreEqual(expectedCoeffs, actualCoeffs, "FromGenerator should work with List<int>");
-        }
+  [Test]
+  public void FromCoeffs_EmptyList() {
+    List<int> emptyCoeffs    = new List<int>();
+    List<int> expectedCoeffs = emptyCoeffs;
 
-        [Test]
-        public void FromGenerator_Array_CorrectCFraction()
-        {
-            int[] coeffs = new int[] { 1, 2, 3 };
-            IEnumerable<int> generator = coeffs;
-            List<int> expectedCoeffs = coeffs.ToList();
+    CFraction fraction     = CFraction.FromCoeffs(emptyCoeffs);
+    var       actualCoeffs = fraction.Take(expectedCoeffs.Count);
 
-            CFraction fraction = CFraction.FromGenerator(generator);
-            List<int> actualCoeffs = fraction.Take(expectedCoeffs.Count);
+    Assert.That(actualCoeffs, Is.EqualTo(expectedCoeffs), "Empty coefficients list should be valid (infinity cf)");
+  }
 
-            CollectionAssert.AreEqual(expectedCoeffs, actualCoeffs, "FromGenerator should work with int[]");
-        }
+  [Test]
+  public void FromGenerator_List() {
+    List<int>        coeffs         = new List<int> { 1, 2, 3 };
+    IEnumerable<int> generator      = coeffs;
+    List<int>        expectedCoeffs = coeffs;
 
-        [Test]
-        public void FromGenerator_IEnumerable_CorrectCFraction()
-        {
-            IEnumerable<int> generator = GetTestGenerator();
-            List<int> expectedCoeffs = new List<int> { 1, 2, 3 };
+    CFraction fraction     = CFraction.FromGenerator(generator);
+    var       actualCoeffs = fraction.Take(expectedCoeffs.Count);
 
-            CFraction fraction = CFraction.FromGenerator(generator);
-            List<int> actualCoeffs = fraction.Take(expectedCoeffs.Count);
+    Assert.That(actualCoeffs, Is.EqualTo(expectedCoeffs), "FromGenerator should work with List<int>");
+  }
 
-            CollectionAssert.AreEqual(expectedCoeffs, actualCoeffs, "FromGenerator should work with IEnumerable<int> generator");
-        }
+  [Test]
+  public void FromGenerator_DifferentRepresentations() {
+    List<int>        coeffs         = new List<int> { 1, 2, 3, 1 };
+    IEnumerable<int> generator      = coeffs;
+    List<int>        expectedCoeffs = new List<int> { 1, 2, 4 };
 
-        private static IEnumerable<int> GetTestGenerator()
-        {
-            yield return 1;
-            yield return 2;
-            yield return 3;
-        }
+    CFraction fraction     = CFraction.FromGenerator(generator);
+    var       actualCoeffs = fraction.Take(expectedCoeffs.Count);
 
-        // [Test]
-        // public void FromRational_NegativeFraction_CorrectCoeffs()
-        // {
-        //     BigInteger numerator = -22;
-        //     BigInteger denominator = 7;
-        //     List<int> expectedCoeffs = new List<int> { -4, 1, 6 };
-        //
-        //     CFraction fraction = CFraction.FromRational(numerator, denominator);
-        //     List<int> actualCoeffs = fraction.Take(expectedCoeffs.Count);
-        //
-        //     CollectionAssert.AreEqual(expectedCoeffs, actualCoeffs, "Coefficients for -22/7 should be [-4, 1, 6]");
-        // }
-    }
+    Assert.That(actualCoeffs, Is.EqualTo(expectedCoeffs), "The [1;2,3,1] should be the same as [1;2,4]");
+  }
+
+  [Test]
+  public void FromGenerator_Array_CorrectCFraction() {
+    int[]            coeffs         = new int[] { 1, 2, 3 };
+    IEnumerable<int> generator      = coeffs;
+    List<int>        expectedCoeffs = coeffs.ToList();
+
+    CFraction fraction     = CFraction.FromGenerator(generator);
+    var       actualCoeffs = fraction.Take(expectedCoeffs.Count);
+
+    Assert.That(actualCoeffs, Is.EqualTo(expectedCoeffs), "FromGenerator should work with int[]");
+  }
+
+  [Test]
+  public void FromGenerator_IEnumerable() {
+    IEnumerable<int> generator      = GetTestGenerator();
+    List<int>        expectedCoeffs = new List<int> { 1, 2, 3 };
+
+    CFraction fraction     = CFraction.FromGenerator(generator);
+    var       actualCoeffs = fraction.Take(expectedCoeffs.Count);
+
+    Assert.That(actualCoeffs, Is.EqualTo(expectedCoeffs), "FromGenerator should work with IEnumerable<int> generator");
+  }
+
+  private static IEnumerable<int> GetTestGenerator() {
+    yield return 1;
+    yield return 2;
+    yield return 3;
+  }
+
+  // [Test]
+  // public void FromRational_NegativeFraction_CorrectCoeffs()
+  // {
+  //     BigInteger numerator = -22;
+  //     BigInteger denominator = 7;
+  //     List<int> expectedCoeffs = new List<int> { -4, 1, 6 };
+  //
+  //     CFraction fraction = CFraction.FromRational(numerator, denominator);
+  //     var actualCoeffs = fraction.Take(expectedCoeffs.Count);
+  //
+  //     Assert.That(actualCoeffs, Is.EqualTo(expectedCoeffs), "Coefficients for -22/7 should be [-4, 1, 6]");
+  // }
+
 }
