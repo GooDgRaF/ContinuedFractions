@@ -10,35 +10,36 @@ namespace ContinuedFractions;
 /// <summary>
 /// Lazy continued fractions of the maximal int.MaxValue length [ :( ]
 /// </summary>
-public readonly partial struct CFraction {
+public partial struct CFraction : IEnumerable<int> {
 
 #region Data and Constructors
-  private readonly IEnumerable<int> _cfEnumerable; // "Генератор" правил
-  private readonly IEnumerator<int> _cfEnumerator; // "Правило" для получения следующего коэффициента бесконечной дроби
-  private readonly List<int>        _cfCashed;     // Конечные непрерывные дроби лежат тут целиком
+  private          IEnumerator<int>? _cfEnumerator; // "Правило" для получения следующего коэффициента бесконечной дроби
+  private readonly List<int>         _cfCashed;     // Конечные непрерывные дроби лежат тут целиком
 
-
-  private bool CacheUpToIndex(int i) {
-    while (_cfCashed.Count <= i) {
-      if (!_cfEnumerator.MoveNext()) {
-        return false;
-      }
-      _cfCashed.Add(_cfEnumerator.Current); // Добавляем следующий элемент в кэш
-    }
-
-    return true;
-  }
 
   private CFraction(List<int> cf) {
     _cfCashed     = cf;
-    _cfEnumerable = new List<int>();
-    _cfEnumerator = _cfEnumerable.GetEnumerator();
+    _cfEnumerator = null;
   }
 
   private CFraction(IEnumerable<int> cf) {
-    _cfEnumerable = cf;
     _cfEnumerator = cf.GetEnumerator();
     _cfCashed     = new List<int>();
+
+    if (_cfEnumerator.MoveNext()) {
+      _cfCashed.Add(_cfEnumerator.Current);
+      if (!_cfEnumerator.MoveNext()) { // обработка случая [a0]
+        _cfEnumerator.Dispose();
+        _cfEnumerator = null;
+      }
+      else {
+        _cfCashed.Add(_cfEnumerator.Current);
+      }
+    }
+    else { // имеем дело с бесконечностью
+      _cfEnumerator.Dispose();
+      _cfEnumerator = null;
+    }
   }
 #endregion
 
@@ -51,29 +52,32 @@ public readonly partial struct CFraction {
     get
       {
         Debug.Assert(i >= 0, $"Index should be non negative. Found: i = {i}");
-
-        if (_cfCashed.Count > i) {
-          return _cfCashed[i];
-        }
-
         if (CacheUpToIndex(i)) {
           return _cfCashed[i];
         }
-        if (_cfCashed.Count == i || _cfCashed.Count == 0) {
-          return null;
-        }
 
-        throw new IndexOutOfRangeException
-          ($"The given index i = {i} is out of boundaries of the cf. It's length is {_cfCashed.Count}");
+        return null;
       }
   }
 
-  public List<int> Take(int n) {
-    if (_cfCashed.Count >= n) {
-      return _cfCashed[..n];
+  private bool CacheUpToIndex(int i) {
+    while (_cfCashed.Count <= i + 2 && _cfEnumerator is not null) {
+      if (!_cfEnumerator.MoveNext()) {
+        _cfEnumerator.Dispose();
+        _cfEnumerator = null;
+
+        if (_cfCashed[^1] == 1) { // приводим число к каноническому виду, то есть, когда последний коэффициент отличен от единицы
+          _cfCashed.RemoveAt(_cfCashed.Count - 1);
+          _cfCashed[^1]++;
+        }
+      }
+      else {
+        _cfCashed.Add(_cfEnumerator.Current); // Добавляем следующий элемент в кэш
+      }
     }
 
-    return CacheUpToIndex(n - 1) ? _cfCashed[..n] : _cfCashed[.._cfCashed.Count];
+
+    return _cfCashed.Count > i;
   }
 #endregion
 
@@ -87,7 +91,14 @@ public readonly partial struct CFraction {
       throw new ArgumentException("There should be no zeros among coefficients (after the first one) of the continued function!");
     }
 
-    return new CFraction(cf);
+    if (r.Count > 1) {
+      if (r[^1] == 1) {
+        r.RemoveAt(r.Count - 1);
+        r[^1]++;
+      }
+    }
+
+    return new CFraction(r);
   }
 
   public static CFraction FromGenerator(IEnumerable<int> cf) => new CFraction(cf);
@@ -98,7 +109,7 @@ public readonly partial struct CFraction {
     StringBuilder res = new StringBuilder("[");
 
     // Берем только до 40 элементов для отображения: чтобы по абсолютной точности соответствовать типу double
-    var elementsToString = Take(41);
+    var elementsToString = this.Take(41).ToList();
 
     if (elementsToString.Count == 0) {
       return res.Append(']').ToString();
@@ -152,6 +163,42 @@ public readonly partial struct CFraction {
       denominator = remainder;
     }
   }
+#endregion
+
+#region IEnumerable<int> implementation
+  private struct CFractionEnumerator : IEnumerator<int> {
+
+    private readonly CFraction _cf;
+    private          int       _index;
+
+    public CFractionEnumerator(CFraction cf) {
+      _cf    = cf;
+      _index = -1; // Перед первым элементом
+    }
+
+    public bool MoveNext() {
+      _index++;
+      int? nextCoeff = _cf[_index];
+
+      return nextCoeff.HasValue;
+    }
+
+    public int Current => _cf[_index]!.Value;
+
+    object IEnumerator.Current => Current;
+
+    public void Reset() { _index = -1; }
+
+    public void Dispose() {
+      // No resources to dispose
+    }
+
+  }
+
+
+  public IEnumerator<int> GetEnumerator() { return new CFractionEnumerator(this); }
+
+  IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
 #endregion
 
 }
