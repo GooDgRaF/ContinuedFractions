@@ -20,22 +20,49 @@ public partial struct CFraction :
              };
   }
 
+#region Unary operators
   public static CFraction operator +(CFraction value) => value;
 
   // public static CFraction operator -(CFraction value) { // хз что это такое пока что
   //   throw new NotImplementedException();
   // }
+#endregion
 
+
+#region Frac
   public static CFraction operator +(CFraction cf,   Frac      frac) => cf.CF_transform(new Matrix22(frac.q, frac.p, 0, frac.q));
   public static CFraction operator +(Frac      frac, CFraction cf)   => cf + frac;
 
+  public static CFraction operator -(CFraction cf,   Frac      frac) => cf.CF_transform(new Matrix22(frac.q, -frac.p, 0, frac.q));
+  public static CFraction operator -(Frac      frac, CFraction cf)   => cf.CF_transform(new Matrix22(-frac.q, frac.p, 0, frac.q));
 
   public static CFraction operator *(CFraction cf,   Frac      frac) => cf.CF_transform(new Matrix22(frac.p, 0, 0, frac.q));
   public static CFraction operator *(Frac      frac, CFraction cf)   => cf * frac;
 
+  public static CFraction operator /(CFraction cf, Frac frac) {
+    if (frac.p == 0) {
+      throw new DivideByZeroException("Division by zero in: CFraction / Frac.");
+    }
 
-  public static CFraction operator /(CFraction cf,   Frac      frac) => cf.CF_transform(new Matrix22(frac.q, 0, 0, frac.p));
-  public static CFraction operator /(Frac      frac, CFraction cf)   => cf / frac;
+    return cf.CF_transform(new Matrix22(frac.q, 0, 0, frac.p));
+  }
+
+  public static CFraction operator /(Frac frac, CFraction cf) => frac * cf.Rcp();
+#endregion
+
+#region Int
+  public static CFraction operator +(CFraction cf, int       a)  => cf + (a, 1);
+  public static CFraction operator +(int       a,  CFraction cf) => cf + a;
+
+  public static CFraction operator -(CFraction cf, int       a)  => cf - (a, 1);
+  public static CFraction operator -(int       a,  CFraction cf) => (a, 1) - cf;
+
+  public static CFraction operator *(CFraction cf, int       a)  => cf * (a, 1);
+  public static CFraction operator *(int       a,  CFraction cf) => cf * a;
+
+  public static CFraction operator /(CFraction cf, int       a)  => cf / (a, 1);
+  public static CFraction operator /(int       a,  CFraction cf) => (a, 1) / cf;
+#endregion
 
 
   public CFraction CF_transform(Matrix22 init) => new CFraction(CF_transform_main(init));
