@@ -43,11 +43,7 @@ public partial struct CFraction : IEnumerable<int> {
   }
 #endregion
 
-#region Properties
-  // public bool IsFinite { get; private set; }; // у readonly структур не может быть set-полей.
-#endregion
-
-#region TakeRegion
+#region Indexer
   public int? this[int i] {
     get
       {
@@ -194,7 +190,6 @@ public partial struct CFraction : IEnumerable<int> {
     }
 
   }
-
 
   public IEnumerator<int> GetEnumerator() { return new CFractionEnumerator(this); }
 
