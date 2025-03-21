@@ -7,26 +7,38 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace ContinuedFractions;
 
-public partial struct CFraction
-{
-  public IEnumerable<(BigInteger numerator, BigInteger denominator)> ToRational() => ToRational(_cfCashed);
+public partial struct CFraction {
 
-      private static IEnumerable<(BigInteger numerator, BigInteger denominator)> ToRational(IEnumerable<int> cf) {
-        BigInteger p1 = 1;
-        BigInteger p0 = 0;
-        BigInteger q1 = 0;
-        BigInteger q0 = 1;
+  public IEnumerable<(decimal numerator, decimal denominator)> ToRational() => ToRational(_cfCashed);
 
-        foreach (int coeff in cf) {
-          BigInteger p = coeff * p1 + p0;
-          BigInteger q = coeff * q1 + q0;
+  private static IEnumerable<(decimal numerator, decimal denominator)> ToRational(IEnumerable<int> cf) {
+    decimal p1 = 1;
+    decimal p0 = 0;
+    decimal q1 = 0;
+    decimal q0 = 1;
 
-          yield return (p, q);
+    foreach (int coeff in cf) {
+      decimal p = coeff * p1 + p0;
+      decimal q = coeff * q1 + q0;
 
-          p0 = p1;
-          p1 = p;
-          q0 = q1;
-          q1 = q;
-        }
-      }
+      yield return (p, q);
+
+      p0 = p1;
+      p1 = p;
+      q0 = q1;
+      q1 = q;
+    }
+  }
+
+  public static explicit operator double(CFraction cf) {
+    var d = cf.Take(40).ToList();
+    if (d.Count == 0) {
+      return double.PositiveInfinity;
+    }
+
+    (var a, var b) = ToRational(d).Last();
+
+    return (double)(a / b);
+  }
+
 }
