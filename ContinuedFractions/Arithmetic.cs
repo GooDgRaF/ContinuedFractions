@@ -30,13 +30,13 @@ public partial struct CFraction :
 
 
 #region Frac
-  public static CFraction operator +(CFraction cf,   Frac      frac) => cf.CF_transform(new Matrix22(frac.q, frac.p, 0, frac.q));
+  public static CFraction operator +(CFraction cf,   Frac      frac) => cf.CF_transform(frac.q, frac.p, 0, frac.q);
   public static CFraction operator +(Frac      frac, CFraction cf)   => cf + frac;
 
-  public static CFraction operator -(CFraction cf,   Frac      frac) => cf.CF_transform(new Matrix22(frac.q, -frac.p, 0, frac.q));
-  public static CFraction operator -(Frac      frac, CFraction cf)   => cf.CF_transform(new Matrix22(-frac.q, frac.p, 0, frac.q));
+  public static CFraction operator -(CFraction cf,   Frac      frac) => cf.CF_transform(frac.q, -frac.p, 0, frac.q);
+  public static CFraction operator -(Frac      frac, CFraction cf)   => cf.CF_transform(-frac.q, frac.p, 0, frac.q);
 
-  public static CFraction operator *(CFraction cf,   Frac      frac) => cf.CF_transform(new Matrix22(frac.p, 0, 0, frac.q));
+  public static CFraction operator *(CFraction cf,   Frac      frac) => cf.CF_transform(frac.p, 0, 0, frac.q);
   public static CFraction operator *(Frac      frac, CFraction cf)   => cf * frac;
 
   public static CFraction operator /(CFraction cf, Frac frac) {
@@ -44,7 +44,7 @@ public partial struct CFraction :
       throw new DivideByZeroException("Division by zero in: CFraction / Frac.");
     }
 
-    return cf.CF_transform(new Matrix22(frac.q, 0, 0, frac.p));
+    return cf.CF_transform(frac.q, 0, 0, frac.p);
   }
 
   public static CFraction operator /(Frac frac, CFraction cf) => frac * cf.Rcp();
@@ -65,9 +65,9 @@ public partial struct CFraction :
 #endregion
 
 
-  public CFraction CF_transform(Matrix22 init) => new CFraction(CF_transform_main(init));
+  public CFraction CF_transform(int a, int b, int c, int d) => new CFraction(CF_transform_main(new Matrix22(a, b, c, d)));
 
-  public IEnumerable<int> CF_transform_main(Matrix22 init) {
+  private IEnumerable<int> CF_transform_main(Matrix22 init) {
     Matrix22 m = init;
     int      i = 0;
 
