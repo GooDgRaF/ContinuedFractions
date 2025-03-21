@@ -5,52 +5,61 @@ public class ArithmeticTests {
 
   public static CFraction cfFin1 = CFraction.FromRational(10, 7); // [1; 2, 3] = 10/7
 
- // #region Reciprocal Tests (Rcp)
- //
- //  [Test]
- //  public void Rcp_Infinity_ReturnsZero() {
- //    var cf = CFraction.Infinity.Rcp();
- //    var expectedCf = CFraction.FromRational(0, 1);
- //
- //    Assert.That(expectedCf.Equals(cf), "Reciprocal of Infinity should be Zero.");
- //  }
- //
- //  [Test]
- //  public void Rcp_Zero_ReturnsInfinity() {
- //    var zeroCf = CFraction.FromRational(0, 1);
- //    var cf = zeroCf.Rcp(); //
- //
- //    Assert.That(CFraction.Infinity.Equals(cf), "Reciprocal of Zero should be Infinity.");
- //  }
- //
- //
- //  [Test]
- //  public void Rcp_Fraction_LessThanOne() {
- //    var fracLessThanOne = CFraction.FromRational(1, 2); // [0; 2]
- //    var cf             = fracLessThanOne.Rcp();
- //    var expectedCf    = CFraction.FromRational(2, 1);    // [2]
- //
- //    Assert.That(expectedCf.Equals(cf), "Reciprocal of [0; 2] (1/2) should be [2] (2/1).");
- //  }
- //
- //  [Test]
- //  public void Rcp_Integer() {
- //    var integerCf   = CFraction.FromRational(2, 1);    // [2]
- //    var cf         = integerCf.Rcp();    // Теперь вызываем как метод экземпляра на integerCf
- //    var expectedCf  = CFraction.FromRational(1, 2);    // [0; 2]
- //
- //    Assert.That(expectedCf.Equals(cf), "Reciprocal of [2] (2/1) should be [0; 2] (1/2).");
- //  }
- //
- //  [Test]
- //  public void Rcp_Fraction_GreaterThanOne() {
- //    var fracGreaterThanOne = CFraction.FromRational(7, 2); // [3; 2]
- //    var cf                  = fracGreaterThanOne.Rcp(); // Теперь вызываем как метод экземпляра на fracGreaterThanOne
- //    var expectedCf         = CFraction.FromRational(2, 7);    // [0; 3, 2]
- //
- //    Assert.That(expectedCf.Equals(cf), "Reciprocal of [3; 2] (7/2) should be [0; 3, 2] (2/7).");
- //  }
- //  #endregion
+#region Reciprocal Tests (Rcp)
+  [Test]
+  public void Rcp_Infinity_ReturnsZero() {
+    var rcp         = CFraction.Infinity.Rcp();
+    var cf = CFraction.FromRational(0, 1);
+
+    Assert.That(cf.Equals(rcp), "Reciprocal of Infinity should be Zero.");
+  }
+
+  [Test]
+  public void Rcp_Zero_ReturnsInfinity() {
+    var cf = CFraction.FromRational(0, 1);
+    var rcp     = cf.Rcp(); //
+
+    Assert.That(CFraction.Infinity.Equals(rcp), "Reciprocal of Zero should be Infinity.");
+  }
+
+
+  [Test]
+  public void Rcp_Fraction_LessThanOne() {
+    var cf = CFraction.FromRational(1, 2); // [0; 2]
+    var rcp              = cf.Rcp();
+    var expectedCf      = CFraction.FromRational(2, 1); // [2]
+
+    Assert.That(expectedCf.Equals(rcp), "Reciprocal of [0; 2] (1/2) should be [2] (2/1).");
+  }
+
+  [Test]
+  public void Rcp_Integer() {
+    var cf  = CFraction.FromRational(2, 1); // [2]
+    var rcp         = cf.Rcp();
+    var expectedCf = CFraction.FromRational(1, 2); // [0; 2]
+
+    Assert.That(expectedCf.Equals(rcp), "Reciprocal of [2] (2/1) should be [0; 2] (1/2).");
+  }
+
+  [Test]
+  public void Rcp_Fraction_GreaterThanOne() {
+    var cf = CFraction.FromRational(7, 2); // [3; 2]
+    var rcp                 = cf.Rcp();
+    var expectedCf         = CFraction.FromRational(2, 7); // [0; 3, 2]
+
+    Assert.That(expectedCf.Equals(rcp), "Reciprocal of [3; 2] (7/2) should be [0; 3, 2] (2/7).");
+  }
+
+  [Test]
+  public void Rcp_Fraction_Cashed() {
+    var cf = CFraction.FromCoeffs(new int[] { 1, 2, 3, 4, 5, 6 });
+    _ = cf.Take(3);
+    var rcp        = cf.Rcp();
+    var expectedCf = CFraction.FromCoeffs(new int[] {0, 1, 2, 3, 4, 5, 6 });
+
+    Assert.That(expectedCf.Equals(rcp), "Reciprocal of [1; 2, 3, 4, 5, 6] should be [0; 1, 2, 3, 4, 5, 6].");
+  }
+#endregion
 
 #region Addition with Rational Tests
   [Test]
@@ -68,7 +77,7 @@ public class ArithmeticTests {
 
   [Test]
   public void AddFrac_1_1() {
-    var cf          = cfFin1 + (1, 1); // 10/7 + 1/1 = 17/7
+    var cf         = cfFin1 + (1, 1); // 10/7 + 1/1 = 17/7
     var expectedCf = CFraction.FromRational(17, 7);
     Assert.That
       (
@@ -79,14 +88,14 @@ public class ArithmeticTests {
 
   [Test]
   public void AddFrac_1_2() {
-    var cf          = cfFin1 + (1, 2); // 10/7 + 1/2 = 27/14
+    var cf         = cfFin1 + (1, 2); // 10/7 + 1/2 = 27/14
     var expectedCf = CFraction.FromRational(27, 14);
     Assert.That(expectedCf.Equals(cf), "Adding 1/2");
   }
 
   [Test]
   public void AddFrac_100_70() {
-    var cf          = cfFin1 + (100, 70); // 10/7 + 100/70 = 200/70 = 20/7 =
+    var cf         = cfFin1 + (100, 70); // 10/7 + 100/70 = 200/70 = 20/7 =
     var expectedCf = CFraction.FromRational(20, 7);
     Assert.That
       (
@@ -110,14 +119,11 @@ public class ArithmeticTests {
   public void AddFrac_100times() {
     var cf = CFraction.FromRational(0, 100);
     for (int i = 0; i < 100; i++) {
-      cf += (1,100);
+      cf += (1, 100);
     }
     var expectedCf = CFraction.FromRational(1, 1);
     Assert.That
-      (
-       expectedCf.Equals(cf)
-     , $"0.01*100 = 1. Found: {cf.ToRational().Last().numerator} / {cf.ToRational().Last().denominator}"
-      );
+      (expectedCf.Equals(cf), $"0.01*100 = 1. Found: {cf.ToRational().Last().numerator} / {cf.ToRational().Last().denominator}");
   }
 
   [Test]
@@ -127,7 +133,7 @@ public class ArithmeticTests {
     var cf1 = cf + (2, 3);
     _ = cf1.Take(20);
 
-    var expectedCf = CFraction.E + (7,6);
+    var expectedCf = CFraction.E + (7, 6);
     Assert.That
       (
        expectedCf.Equals(cf1)
@@ -137,7 +143,7 @@ public class ArithmeticTests {
 
   [Test]
   public void AddFrac_Sqrt2_Plus_1() {
-    var cf          = CFraction.Sqrt2 + (1, 1); // Sqrt(2) + 1 = [2; 2, 2, 2, ...]
+    var cf         = CFraction.Sqrt2 + (1, 1); // Sqrt(2) + 1 = [2; 2, 2, 2, ...]
     var expectedCf = CFraction.FromGenerator(new int[] { 2 }.Concat(Enumerable.Repeat(2, 1000)));
     Assert.That(expectedCf.Equals(cf), "Adding 1 to Sqrt(2)");
   }
@@ -152,7 +158,7 @@ public class ArithmeticTests {
 
   [Test]
   public void MultiplyFrac_Zero() {
-    var cf          = cfFin1 * (0, 1);
+    var cf         = cfFin1 * (0, 1);
     var expectedCf = CFraction.FromRational(0, 1);
     Assert.That(expectedCf.Equals(cf), "Multiplying by 0/1 should return zero.");
   }
@@ -165,21 +171,21 @@ public class ArithmeticTests {
 
   [Test]
   public void MultiplyFrac_Positive_2_1() {
-    var cf          = cfFin1 * (2, 1); // 10/7 * 2/1 = 20/7 = [2; 1, 1, 6]
+    var cf         = cfFin1 * (2, 1); // 10/7 * 2/1 = 20/7 = [2; 1, 1, 6]
     var expectedCf = CFraction.FromRational(20, 7);
     Assert.That(expectedCf.Equals(cf), "Multiplying by 2/1");
   }
 
   [Test]
   public void MultiplyFrac_Positive_1_2() {
-    var cf          = cfFin1 * (1, 2); // 10/7 * 1/2 = 10/14 = 5/7
+    var cf         = cfFin1 * (1, 2); // 10/7 * 1/2 = 10/14 = 5/7
     var expectedCf = CFraction.FromRational(5, 7);
     Assert.That(expectedCf.Equals(cf), "Multiplying by 1/2");
   }
 
   [Test]
   public void MultiplyFrac_Positive_3_2() {
-    var cf          = cfFin1 * (3, 2); // 10/7 * 3/2 = 30/14 = 15/7 = [2; 7]
+    var cf         = cfFin1 * (3, 2); // 10/7 * 3/2 = 30/14 = 15/7 = [2; 7]
     var expectedCf = CFraction.FromRational(15, 7);
     Assert.That(expectedCf.Equals(cf), "Multiplying by 3/2 (positive fraction > 1)");
   }
@@ -193,13 +199,10 @@ public class ArithmeticTests {
     // Теперь используем Equals напрямую, полагаясь на comparationCut
     Assert.That(cf.Equals(expectedCf), "Multiplying Sqrt(2) by 2");
   }
-
 #endregion
 
 
-
 #region Generators for Tests
-
   // 2*Sqrt(2)
   private static IEnumerable<int> TwoSqrt2TestGenerator() {
     yield return 2;
@@ -209,7 +212,6 @@ public class ArithmeticTests {
       yield return 4;
     }
   }
-
 #endregion
 
 }

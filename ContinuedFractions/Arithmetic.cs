@@ -1,21 +1,23 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Numerics;
 
 namespace ContinuedFractions;
 
-public readonly partial struct CFraction :
+public partial struct CFraction :
   // IUnaryNegationOperators<CFraction, CFraction> ,
   IUnaryPlusOperators<CFraction, CFraction> {
 
   private static readonly int[] zeroForRcp = new int[] { 0 };
 
   public CFraction Rcp() {
-    switch (this[0]) {
-      case null: return FromRational(0, 1); // 1/inf --> 0
-      case 0:    return FromGenerator(_cfEnumerable.Skip(1)); // 1/[0;a0,a1,..] --> [a0;a1,...]
-      case > 0:  return FromGenerator(zeroForRcp.Concat(_cfEnumerable)); // 1/[a0;a1,...] --> [0;a0,a1,..]
-      default:   throw new NotImplementedException("я хз что делать с отрицательными числами пока что");
-    }
+    return this[0] switch
+             {
+               null => FromRational(0, 1)                     // 1/inf --> 0
+             , 0    => FromGenerator(this.Skip(1))            // 1/[0;a0,a1,..] --> [a0;a1,...]
+             , > 0  => FromGenerator(zeroForRcp.Concat(this)) // 1/[a0;a1,...] --> [0;a0,a1,..]
+             , _    => throw new NotImplementedException("я хз что делать с отрицательными числами пока что")
+             };
   }
 
   public static CFraction operator +(CFraction value) => value;
@@ -92,6 +94,8 @@ public readonly partial struct CFraction :
     if (m[2] != 0 && m[3] < 0) { // Есть ноль в области определения
       return false;
     }
+
+    // todo: сделать целочисленные вычисления в дробях явно
 
     // Функция ограничена
     double n0 = (double)m[0] / m[2];
