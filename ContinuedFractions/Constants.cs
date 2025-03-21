@@ -2,9 +2,9 @@
 
 public partial struct CFraction {
 
-  public static readonly CFraction E     = new CFraction(EGenerator());
-  public static readonly CFraction Sqrt2 = new CFraction(Sqrt2Generator());
-  public static readonly CFraction Infinity = new CFraction(new List<int>());
+  public static CFraction E     = new CFraction(EGenerator());
+  public static CFraction Sqrt2 = new CFraction(Sqrt2Generator());
+  public static CFraction Infinity = new CFraction(new List<int>());
 
 
   private static IEnumerable<int> EGenerator() {
