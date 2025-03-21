@@ -7,7 +7,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace ContinuedFractions;
 
-public readonly partial struct CFraction
+public partial struct CFraction
 {
   public IEnumerable<(BigInteger numerator, BigInteger denominator)> ToRational() => ToRational(_cfCashed);
 
