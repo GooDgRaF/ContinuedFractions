@@ -2,7 +2,7 @@
 
 public partial struct CFraction : IComparable<CFraction>, IEquatable<CFraction> {
 
-  private const int comparationCut = 100;
+  private const int comparationCut = 41;
 
 
   public int CompareTo(CFraction other) { // A < B <==> lexmin([a0;-a1,a2,-a3,...,a2k,-a(2k+1),...], [b0;-b1,b2,-b3,...,b2k,-b(2k+1),...])
