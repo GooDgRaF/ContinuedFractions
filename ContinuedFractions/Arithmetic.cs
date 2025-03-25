@@ -5,7 +5,7 @@ using System.Numerics;
 namespace ContinuedFractions;
 
 public partial struct CFraction :
-  // IUnaryNegationOperators<CFraction, CFraction> ,
+  IUnaryNegationOperators<CFraction, CFraction> ,
   IUnaryPlusOperators<CFraction, CFraction> {
 
   private static readonly int[] zeroForRcp = new int[] { 0 };
@@ -21,11 +21,9 @@ public partial struct CFraction :
   }
 
 #region Unary operators
-  public static CFraction operator +(CFraction value) => value;
+  public static CFraction operator +(CFraction cf) => cf;
 
-  // public static CFraction operator -(CFraction value) { // хз что это такое пока что
-  //   throw new NotImplementedException();
-  // }
+  public static CFraction operator -(CFraction cf) => cf.Transform(-1, 0, 0, 1);
 #endregion
 
 
@@ -65,6 +63,14 @@ public partial struct CFraction :
 #endregion
 
 
+  /// <summary>
+  /// Perform a transformation by: (a*x + b) / (c*x + d)  where x is this continued function.
+  /// </summary>
+  /// <param name="a"></param>
+  /// <param name="b"></param>
+  /// <param name="c"></param>
+  /// <param name="d"></param>
+  /// <returns></returns>
   public CFraction Transform(int a, int b, int c, int d) => new CFraction(CF_transform_main(new Matrix22(a, b, c, d)));
 
   private IEnumerable<int> CF_transform_main(Matrix22 init) {
