@@ -21,7 +21,7 @@ public partial class CFraction : IUnaryNegationOperators<CFraction, CFraction>, 
 #region Unary operators
   public static CFraction operator +(CFraction cf) => cf;
 
-  public static CFraction operator -(CFraction cf) => cf.Transform(-1, 0, 0, 1);
+  public static CFraction operator -(CFraction cf) => cf.Transform(-1, 0, 0, 1).IdTransform();
 
   // public static CFraction operator -(CFraction cf) {
   //   if (cf[0] is null) { // -inf = inf
@@ -45,21 +45,28 @@ public partial class CFraction : IUnaryNegationOperators<CFraction, CFraction>, 
 
 
 #region Frac
-  public static CFraction operator +(CFraction cf,   Frac      frac) => cf.Transform(frac.q, frac.p, 0, frac.q);
+  public static CFraction operator +(CFraction cf,   Frac      frac) => cf.Transform(frac.q, frac.p, 0, frac.q).IdTransform();
   public static CFraction operator +(Frac      frac, CFraction cf)   => cf + frac;
 
-  public static CFraction operator -(CFraction cf,   Frac      frac) => cf.Transform(frac.q, -frac.p, 0, frac.q);
-  public static CFraction operator -(Frac      frac, CFraction cf)   => cf.Transform(-frac.q, frac.p, 0, frac.q);
+  public static CFraction operator -(CFraction cf,   Frac      frac) => cf.Transform(frac.q, -frac.p, 0, frac.q).IdTransform();
+  public static CFraction operator -(Frac      frac, CFraction cf)   => cf.Transform(-frac.q, frac.p, 0, frac.q).IdTransform();
 
-  public static CFraction operator *(CFraction cf,   Frac      frac) => cf.Transform(frac.p, 0, 0, frac.q);
-  public static CFraction operator *(Frac      frac, CFraction cf)   => cf * frac;
+  public static CFraction operator *(CFraction cf, Frac frac) {
+    if (cf.Equals(Infinity) && frac.p == 0) {
+      throw new ArgumentException("inf * 0!");
+    }
+
+    return cf.Transform(frac.p, 0, 0, frac.q).IdTransform();
+  }
+
+  public static CFraction operator *(Frac frac, CFraction cf) => cf * frac;
 
   public static CFraction operator /(CFraction cf, Frac frac) {
     if (frac.p == 0) {
       throw new DivideByZeroException("Division by zero in: CFraction / Frac.");
     }
 
-    return cf.Transform(frac.q, 0, 0, frac.p);
+    return cf.Transform(frac.q, 0, 0, frac.p).IdTransform();
   }
 
   public static CFraction operator /(Frac frac, CFraction cf) {
@@ -122,6 +129,10 @@ public partial class CFraction : IUnaryNegationOperators<CFraction, CFraction>, 
       foreach (int k in GCD(m[0], m[2]))
         yield return k;
     }
+    // m = new Matrix22(m[0], 0, m[2], 0);
+    // foreach ((int q, Matrix22 r) gcd in GCD(m)) {
+    //   yield return gcd.q;
+    // }
   }
 
   private static Matrix22 LFT_step(Matrix22 m, int a) => m * Matrix22.Homographic(a);
