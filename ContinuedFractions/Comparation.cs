@@ -1,6 +1,6 @@
 ﻿namespace ContinuedFractions;
 
-public partial struct CFraction : IComparable<CFraction>, IEquatable<CFraction> {
+public partial class CFraction : IComparable<CFraction>, IEquatable<CFraction> {
 
   private const int comparationCut = 41;
 

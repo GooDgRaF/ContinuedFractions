@@ -7,11 +7,11 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace ContinuedFractions;
 
-public partial struct CFraction {
+public partial class CFraction {
 
-  public IEnumerable<(decimal numerator, decimal denominator)> ToRational() => ToRational(_cfCashed);
+  public IEnumerable<(BigInteger numerator, BigInteger denominator)> ToRational() => ToRational(_cfCashed);
 
-  private static IEnumerable<(decimal numerator, decimal denominator)> ToRational(IEnumerable<int> cf) {
+  private static IEnumerable<(BigInteger numerator, BigInteger denominator)> ToRational(IEnumerable<int> cf) {
     decimal p1 = 1;
     decimal p0 = 0;
     decimal q1 = 0;
@@ -21,7 +21,7 @@ public partial struct CFraction {
       decimal p = coeff * p1 + p0;
       decimal q = coeff * q1 + q0;
 
-      yield return (p, q);
+      yield return ((BigInteger)p, (BigInteger)q);
 
       p0 = p1;
       p1 = p;
@@ -38,7 +38,7 @@ public partial struct CFraction {
 
     (var a, var b) = ToRational(d).Last();
 
-    return (double)(a / b);
+    return (double)((decimal)a / (decimal)b);
   }
 
 }

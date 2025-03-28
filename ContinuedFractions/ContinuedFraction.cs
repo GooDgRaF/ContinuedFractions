@@ -8,14 +8,13 @@ using System.Diagnostics.CodeAnalysis;
 namespace ContinuedFractions;
 
 /// <summary>
-/// Lazy continued fractions of the maximal int.MaxValue length [ :( ]
+/// [not?] Lazy continued fractions of the maximal int.MaxValue length [ :( ]
 /// </summary>
-public partial struct CFraction : IEnumerable<int> {
+public partial class CFraction : IEnumerable<int> {
 
 #region Data and Constructors
   private          IEnumerator<int>? _cfEnumerator; // "Правило" для получения следующего коэффициента бесконечной дроби
   private readonly List<int>         _cfCashed;     // Конечные непрерывные дроби лежат тут целиком
-
 
   private CFraction(List<int> cf) {
     _cfCashed     = cf;
@@ -32,11 +31,11 @@ public partial struct CFraction : IEnumerable<int> {
         _cfEnumerator.Dispose();
         _cfEnumerator = null;
       }
-      else {
+      else { // если был ещё элемент, то добавим его [a0;a1] так как итератор сдвинули успешно
         _cfCashed.Add(_cfEnumerator.Current);
       }
     }
-    else { // имеем дело с бесконечностью
+    else { // имеем дело с [], то есть с бесконечностью
       _cfEnumerator.Dispose();
       _cfEnumerator = null;
     }
@@ -48,11 +47,11 @@ public partial struct CFraction : IEnumerable<int> {
     get
       {
         Debug.Assert(i >= 0, $"Index should be non negative. Found: i = {i}");
-        if (CacheUpToIndex(i)) {
-          return _cfCashed[i];
+        if (!CacheUpToIndex(i)) {
+          return null;
         }
 
-        return null;
+        return _cfCashed[i];
       }
   }
 
@@ -78,13 +77,28 @@ public partial struct CFraction : IEnumerable<int> {
 #endregion
 
 #region Factories
-  public static CFraction FromRational(BigInteger numerator, BigInteger denominator)
-    => new(RationalGenerator(numerator, denominator));
+  public static CFraction FromRational(BigInteger numerator, BigInteger denominator) {
+    if (numerator == 0 && denominator == 0) {
+      throw new ArgumentException("Can't handle the 0/0 fraction!");
+    }
+
+    int sign = numerator.Sign * denominator.Sign;
+
+    numerator   = BigInteger.Abs(numerator);
+    denominator = BigInteger.Abs(denominator);
+
+    return sign switch
+             {
+               < 0 => new CFraction(RationalGenerator(-numerator, denominator)).IdTransform()
+             , _   => new CFraction(RationalGenerator(numerator, denominator))
+             };
+  }
 
   public static CFraction FromCoeffs(IList<int> cf) {
     List<int> r = cf.ToList();
-    if (r.Skip(1).Any(c => c == 0)) {
-      throw new ArgumentException("There should be no zeros among coefficients (after the first one) of the continued function!");
+    if (r.Skip(1).Any(c => c < 1)) {
+      throw new ArgumentException
+        ("There should be all coefficients of the continued function (after the first one) greater than zero!");
     }
 
     if (r.Count > 1) {
@@ -162,36 +176,31 @@ public partial struct CFraction : IEnumerable<int> {
 #endregion
 
 #region IEnumerable<int> implementation
-  private struct CFractionEnumerator : IEnumerator<int> {
+  private class CFEnumerator : IEnumerator<int> {
 
     private readonly CFraction _cf;
-    private          int       _index;
 
-    public CFractionEnumerator(CFraction cf) {
-      _cf    = cf;
-      _index = -1; // Перед первым элементом
-    }
+    private int _index = -1; // Перед первым элементом
+
+    public CFEnumerator(CFraction cf) => _cf = cf;
 
     public bool MoveNext() {
       _index++;
-      int? nextCoeff = _cf[_index];
 
-      return nextCoeff.HasValue;
+      return _cf.CacheUpToIndex(_index);
     }
 
-    public int Current => _cf[_index]!.Value;
+    public int Current => _cf._cfCashed[_index];
 
     object IEnumerator.Current => Current;
 
     public void Reset() { _index = -1; }
 
-    public void Dispose() {
-      // No resources to dispose
-    }
+    public void Dispose() { }
 
   }
 
-  public IEnumerator<int> GetEnumerator() { return new CFractionEnumerator(this); }
+  public IEnumerator<int> GetEnumerator() { return new CFEnumerator(this); }
 
   IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
 #endregion

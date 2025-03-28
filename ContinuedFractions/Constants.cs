@@ -1,6 +1,6 @@
 ﻿namespace ContinuedFractions;
 
-public partial struct CFraction {
+public partial class CFraction {
 
   public static CFraction E        = new CFraction(EGenerator());
   public static CFraction Sqrt2    = new CFraction(Sqrt2Generator());
@@ -8,7 +8,7 @@ public partial struct CFraction {
   public static CFraction Zero     = new CFraction(new int[] { 0 });
 
 
-  private static IEnumerable<int> EGenerator() {
+  public static IEnumerable<int> EGenerator() {
     yield return 2;
 
     int k = 0;
@@ -22,7 +22,7 @@ public partial struct CFraction {
   }
 
 
-  private static IEnumerable<int> Sqrt2Generator() {
+  public static IEnumerable<int> Sqrt2Generator() {
     yield return 1;
 
     while (true) {
