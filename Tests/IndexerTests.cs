@@ -53,7 +53,7 @@ public class IndexerTests {
   public void Indexer_ValidIndexOutsideCache() {
     List<int> coeffs   = new List<int> { 1, 2, 3, 4, 5 };
     CFraction fraction = CFraction.FromGenerator(coeffs);
-    fraction.Take(2);
+    _ = fraction.Take(2);
 
     int? actualValue = fraction[3];
 
