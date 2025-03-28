@@ -3,343 +3,699 @@
 [TestFixture]
 public class ArithmeticTests {
 
-  public static CFraction cfFin1 = CFraction.FromRational(10, 7); // [1; 2, 3] = 10/7
+  // Базовые дроби для тестов
+  public static CFraction cfPosFin      = CFraction.FromRational(10, 7);  // [1; 2, 3]
+  public static CFraction cfNegFin      = CFraction.FromRational(-10, 7); // [-2; 1, 1, 3]
+  public static CFraction cfPosFin_7_2  = CFraction.FromRational(7, 2);   // [3; 2]
+  public static CFraction cfPosFin_2_7  = CFraction.FromRational(2, 7);   // [0; 3, 2]
+  public static CFraction cfPosInt_3    = CFraction.FromRational(3, 1);   // [3]
+  public static CFraction cfNegFin_m7_2 = CFraction.FromRational(-7, 2);  // [-4; 2]
+  public static CFraction cfNegFin_m2_7 = CFraction.FromRational(-2, 7);  // [-1; 1, 2, 2]
+  public static CFraction cfNegInt_m3   = CFraction.FromRational(-3, 1);  // [-3]
+  public static CFraction cfSqrt2       = CFraction.Sqrt2;                // [1; 2, 2, ...]
+  public static CFraction cfE           = CFraction.E;                    // [2; 1, 2, 1, 1, 4, ...]
+
+  public static Frac fracPos    = (3, 2);  // 3/2
+  public static Frac fracNeg    = (-3, 2); // -3/2
+  public static Frac fracPosBig = (22, 7); // Пример ~Пи
+  public static Frac fracNegBig = (-22, 7);
+  public static Frac fracZero   = (0, 1);
+  public static Frac fracOne    = (1, 1);
+  public static Frac fracNegOne = (-1, 1);
+  public static Frac frac_10_7  = (10, 7);
+  public static Frac frac_m10_7 = (-10, 7);
+  public static Frac frac_1_7   = (1, 7);
+  public static Frac frac_m1_7  = (-1, 7);
+
 
 #region Reciprocal Tests (Rcp)
+  // --- Edge Cases ---
   [Test]
   public void Rcp_Infinity() {
-    var rcp = CFraction.Infinity.Rcp();
-    var cf  = CFraction.Zero;
-
-    Assert.That(cf.Equals(rcp), "Reciprocal of Infinity should be Zero.");
+    var rcp        = CFraction.Infinity.Rcp();
+    var expectedCf = CFraction.Zero;
+    Assert.That(expectedCf.Equals(rcp), $"rcp = {rcp}\nexpected = {expectedCf}");
   }
 
   [Test]
   public void Rcp_Zero() {
-    var cf  = CFraction.Zero;
-    var rcp = cf.Rcp();
-
-    Assert.That(CFraction.Infinity.Equals(rcp), "Reciprocal of Zero should be Infinity.");
-  }
-
-
-  [Test]
-  public void Rcp_Fraction_LessThanOne() {
-    var cf         = CFraction.FromRational(1, 2); // [0; 2]
-    var rcp        = cf.Rcp();
-    var expectedCf = CFraction.FromRational(2, 1); // [2]
-
-    Assert.That(expectedCf.Equals(rcp), "Reciprocal of [0; 2] (1/2) should be [2] (2/1).");
-  }
-
-  [Test]
-  public void Rcp_Integer() {
-    var cf         = CFraction.FromRational(2, 1); // [2]
-    var rcp        = cf.Rcp();
-    var expectedCf = CFraction.FromRational(1, 2); // [0; 2]
-
-    Assert.That(expectedCf.Equals(rcp), "Reciprocal of [2] (2/1) should be [0; 2] (1/2).");
-  }
-
-  [Test]
-  public void Rcp_Fraction_GreaterThanOne() {
-    var cf         = CFraction.FromRational(7, 2); // [3; 2]
-    var rcp        = cf.Rcp();
-    var expectedCf = CFraction.FromRational(2, 7); // [0; 3, 2]
-
-    Assert.That(expectedCf.Equals(rcp), "Reciprocal of [3; 2] (7/2) should be [0; 3, 2] (2/7).");
-  }
-
-  [Test]
-  public void Rcp_Fraction_Cashed() {
-    var cf = CFraction.FromCoeffs(new int[] { 1, 2, 3, 4, 5, 6 });
-    _ = cf.Take(3);
-    var rcp        = cf.Rcp();
-    var expectedCf = CFraction.FromCoeffs(new int[] { 0, 1, 2, 3, 4, 5, 6 });
-
-    Assert.That(expectedCf.Equals(rcp), "Reciprocal of [1; 2, 3, 4, 5, 6] should be [0; 1, 2, 3, 4, 5, 6].");
-  }
-#endregion
-
-#region Addition with Rational Tests
-  [Test]
-  public void AddFrac_Zero0() {
-    var cf = CFraction.Zero + (0, 1);
-    Assert.That(CFraction.Zero.Equals(cf), "Adding 0/1 to Zero should return the Zero CF");
-  }
-
-  [Test]
-  public void AddFrac_Infinity() {
-    var cf = CFraction.Infinity + (22, 7);
-
-    Assert.That(CFraction.FromCoeffs(Array.Empty<int>()).Equals(cf), "Adding m/n to the infinity should be equals to infinity.");
-  }
-
-  [Test]
-  public void AddFrac_Zero() {
-    var cf = cfFin1 + (0, 1);
-    Assert.That(cfFin1.Equals(cf), "Adding 0/1 should return the original CF");
-  }
-
-  [Test]
-  public void AddFrac_1_1() {
-    var cf         = cfFin1 + (1, 1); // 10/7 + 1/1 = 17/7
-    var expectedCf = CFraction.FromRational(17, 7);
-    Assert.That
-      (
-       expectedCf.Equals(cf)
-     , $"Adding 1/1 should return 17 / 7. Found: {cf.ToRational().Last().numerator} / {cf.ToRational().Last().denominator}"
-      );
-  }
-
-  [Test]
-  public void AddFrac_1_2() {
-    var cf         = cfFin1 + (1, 2); // 10/7 + 1/2 = 27/14
-    var expectedCf = CFraction.FromRational(27, 14);
-    Assert.That(expectedCf.Equals(cf), "Adding 1/2");
-  }
-
-  [Test]
-  public void AddFrac_100_70() {
-    var cf         = cfFin1 + (100, 70); // 10/7 + 100/70 = 200/70 = 20/7 =
-    var expectedCf = CFraction.FromRational(20, 7);
-    Assert.That
-      (
-       expectedCf.Equals(cf)
-     , $"Adding 100/70 should return 20 / 7. Found: {cf.ToRational().Last().numerator} / {cf.ToRational().Last().denominator}"
-      );
-  }
-
-  [Test]
-  public void AddFrac_NonSimple() {
-    var cf         = CFraction.FromRational(100, 32) + (75, 32); // 100/32 + 75/32 = 175/32
-    var expectedCf = CFraction.FromRational(175, 32);
-    Assert.That
-      (
-       expectedCf.Equals(cf)
-     , $"100/32 + 75/32 = 175/32. Found: {cf.ToRational().Last().numerator} / {cf.ToRational().Last().denominator}"
-      );
-  }
-
-  [Test]
-  public void AddFrac_100times() {
-    var cf = CFraction.FromRational(0, 100);
-    for (int i = 0; i < 100; i++) {
-      cf += (1, 100);
-    }
-    var expectedCf = CFraction.FromRational(1, 1);
-    Assert.That
-      (expectedCf.Equals(cf), $"0.01*100 = 1. Found: {cf.ToRational().Last().numerator} / {cf.ToRational().Last().denominator}");
-  }
-
-  [Test]
-  public void AddFrac_Sequential() {
-    var cf = CFraction.E + (1, 2);
-    _ = cf.Take(10);
-    var cf1 = cf + (2, 3);
-    _ = cf1.Take(20);
-
-    var expectedCf = CFraction.E + (7, 6);
-    Assert.That
-      (
-       expectedCf.Equals(cf1)
-     , $"e + 1/2 + 2/3 = e + 7/6. Found: {cf.ToRational().Last().numerator} / {cf.ToRational().Last().denominator}"
-      );
-  }
-
-  [Test]
-  public void AddFrac_Sqrt2_Plus_1() {
-    var cf         = CFraction.Sqrt2 + (1, 1); // Sqrt(2) + 1 = [2; 2, 2, 2, ...]
-    var expectedCf = CFraction.FromGenerator(new int[] { 2 }.Concat(Enumerable.Repeat(2, 1000)));
-    Assert.That(expectedCf.Equals(cf), "Adding 1 to Sqrt(2)");
-  }
-#endregion
-
-#region Subtraction Tests
-  [Test]
-  public void SubtractCF_Frac_Positive_Smaller() {
-    var r          = cfFin1 - (1, 1); // (10/7) - (1/1) = 3/7
-    var expectedCf = CFraction.FromRational(3, 7);
-    Assert.That(expectedCf.Equals(r), "Subtracting smaller positive Frac from CF");
-  }
-
-  [Test]
-  public void SubtractCF_Frac_Positive_Equal() {
-    var r          = cfFin1 - (10, 7); // (10/7) - (10/7) = 0
-    var expectedCf = CFraction.Zero;
-    Assert.That(expectedCf.Equals(r), "Subtracting equal positive Frac from CF should return Zero");
-  }
-
-  [Test]
-  public void SubtractCF_Frac_Zero() {
-    var r = cfFin1 - (0, 1); // (10/7) - (0/1) = 10/7
-    Assert.That(cfFin1.Equals(r), "Subtracting Zero Frac from CF should return the original CF");
-  }
-
-  [Test]
-  public void SubtractCF_Frac_Infinity() {
-    var r = CFraction.Infinity - (22, 7);
-    Assert.That(CFraction.Infinity.Equals(r), "Subtracting Frac from Infinity CF should return Infinity CF");
-  }
-
-  [Test]
-  public void SubtractFrac_CF_Positive_Smaller() {
-    var r          = (2, 1) - cfFin1; // (2/1) - (10/7) = 4/7
-    var expectedCf = CFraction.FromRational(4, 7);
-    Assert.That(expectedCf.Equals(r), "Subtracting smaller positive CF from Frac");
-  }
-
-  [Test]
-  public void SubtractFrac_CF_Positive_Equal() {
-    var r          = (10, 7) - cfFin1; // (10/7) - (10/7) = 0
-    var expectedCf = CFraction.Zero;
-    Assert.That(expectedCf.Equals(r), "Subtracting equal positive CF from Frac should return Zero");
-  }
-
-  [Test]
-  public void SubtractFrac_CF_ZeroCF() {
-    var r          = (22, 7) - CFraction.Zero; // (22/7) - 0 = 22/7
-    var expectedCf = CFraction.FromRational(22, 7);
-    Assert.That(expectedCf.Equals(r), "Subtracting Zero CF from Frac should return the original Frac as CF");
-  }
-
-  [Test]
-  public void SubtractFrac_InfinityCF() {
-    var r          = (22, 7) - CFraction.Infinity; // (22/7) - Infinity = Infinity
+    var rcp        = CFraction.Zero.Rcp();
     var expectedCf = CFraction.Infinity;
-    Assert.That(expectedCf.Equals(r), "Subtracting Infinity CF from Frac should be Infinity");
+    Assert.That(expectedCf.Equals(rcp), $"rcp = {rcp}\nexpected = {expectedCf}");
+  }
+
+  // --- Positive Cases ---
+  [Test]
+  public void Rcp_Positive_GreaterThanOne() {
+    var rcp        = cfPosFin_7_2.Rcp(); // Rcp(7/2) = 2/7
+    var expectedCf = CFraction.FromRational(2, 7);
+    Assert.That(expectedCf.Equals(rcp), $"rcp = {rcp}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Rcp_Positive_LessThanOne() {
+    var rcp        = cfPosFin_2_7.Rcp(); // Rcp(2/7) = 7/2
+    var expectedCf = CFraction.FromRational(7, 2);
+    Assert.That(expectedCf.Equals(rcp), $"rcp = {rcp}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Rcp_Positive_Integer() {
+    var rcp        = cfPosInt_3.Rcp(); // Rcp(3/1) = 1/3
+    var expectedCf = CFraction.FromRational(1, 3);
+    Assert.That(expectedCf.Equals(rcp), $"rcp = {rcp}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Rcp_Positive_Irrational_Sqrt2() {
+    var rcp        = cfSqrt2.Rcp(); // Rcp([1; 2, 2...]) = [0; 1, 2, 2...]
+    var expectedCf = CFraction.FromGenerator(new int[] { 0 }.Concat(cfSqrt2));
+    Assert.That(expectedCf.Equals(rcp), $"rcp = {rcp}\nexpected = {expectedCf}");
+  }
+
+
+  // --- Negative Cases ---
+  [Test]
+  public void Rcp_Negative_AbsGreaterThanOne() {
+    var rcp        = cfNegFin_m7_2.Rcp(); // Rcp(-7/2) = -2/7
+    var expectedCf = CFraction.FromRational(-2, 7);
+    Assert.That(expectedCf.Equals(rcp), $"rcp = {rcp}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Rcp_Negative_AbsLessThanOne() {
+    var rcp        = cfNegFin_m2_7.Rcp(); // Rcp(-2/7) = -7/2
+    var expectedCf = CFraction.FromRational(-7, 2);
+    Assert.That(expectedCf.Equals(rcp), $"rcp = {rcp}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Rcp_NegativeInteger() {
+    var rcp        = cfNegInt_m3.Rcp(); // Rcp(-3/1) = -1/3
+    var expectedCf = CFraction.FromRational(-1, 3);
+    Assert.That(expectedCf.Equals(rcp), $"rcp = {rcp}\nexpected = {expectedCf}");
   }
 #endregion
 
-#region Multiplication by Rational Tests
+#region Addition Tests (+)
+  // --- Edge Cases ---
   [Test]
-  public void MultiplyFrac_Infinity() {
-    var cf = CFraction.Infinity * (22, 7);
-    Assert.That(CFraction.Infinity.Equals(cf), "Multiplying infinity by m/n should be infinity.");
+  public void Add_CFPos_FracZero() {
+    var cf = cfPosFin + fracZero; // 10/7 + 0 = 10/7
+    Assert.That(cfPosFin.Equals(cf), $"cf = {cf}\nexpected = {cfPosFin}");
   }
 
   [Test]
-  public void MultiplyFrac_Zero() {
-    var cf         = cfFin1 * (0, 1);
+  public void Add_CFZero_FracPos() {
+    var cf         = CFraction.Zero + fracPos; // 0 + 3/2 = 3/2
+    var expectedCf = CFraction.FromRational(fracPos.p, fracPos.q);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Add_CFZero_FracZero() {
+    var cf = CFraction.Zero + fracZero; // 0 + 0 = 0
+    Assert.That(CFraction.Zero.Equals(cf), $"cf = {cf}\nexpected = {CFraction.Zero}");
+  }
+
+  [Test]
+  public void Add_CFInfinity_FracAny() {
+    var cf1 = CFraction.Infinity + fracPos;
+    var cf2 = CFraction.Infinity + fracNeg;
+    var cf3 = CFraction.Infinity + fracZero;
+    Assert.That(CFraction.Infinity.Equals(cf1), $"cf1 = {cf1}\nexpected = {CFraction.Infinity}");
+    Assert.That(CFraction.Infinity.Equals(cf2), $"cf2 = {cf2}\nexpected = {CFraction.Infinity}");
+    Assert.That(CFraction.Infinity.Equals(cf3), $"cf3 = {cf3}\nexpected = {CFraction.Infinity}");
+  }
+
+  // --- Positive Cases ---
+  [Test]
+  public void Add_CFPos_FracPos() {
+    var cf         = cfPosFin + fracPos; // 10/7 + 3/2 = 41/14
+    var expectedCf = CFraction.FromRational(41, 14);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Add_FracPos_CFPos() // Проверка коммутативности
+  {
+    var cf         = fracPos + cfPosFin; // 3/2 + 10/7 = 41/14
+    var expectedCf = CFraction.FromRational(41, 14);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Add_Sqrt2_Plus_1() {
+    var cf         = cfSqrt2 + fracOne; // Sqrt(2) + 1 = [2; 2, 2, ...]
+    var expectedCf = CFraction.FromGenerator(new int[] { 2 }.Concat(Enumerable.Repeat(2, 100)));
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  // --- Negative Cases ---
+  [Test]
+  public void Add_CFPos_FracNeg_ResultPos() {
+    var cf         = cfPosFin + frac_m1_7; // 10/7 + (-1/7) = 9/7
+    var expectedCf = CFraction.FromRational(9, 7);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Add_CFPos_FracNeg_ResultNeg() {
+    var cf         = cfPosFin + fracNeg; // 10/7 + (-3/2) = -1/14
+    var expectedCf = CFraction.FromRational(-1, 14);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Add_CFPos_FracNeg_ResultZero() {
+    var cf         = cfPosFin + frac_m10_7; // 10/7 + (-10/7) = 0
     var expectedCf = CFraction.Zero;
-    Assert.That(expectedCf.Equals(cf), "Multiplying by 0/1 should return zero.");
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
   }
 
   [Test]
-  public void MultiplyFrac_One() {
-    var cf = cfFin1 * (1, 1);
-    Assert.That(cfFin1.Equals(cf), "Multiplying by 1/1 should return the original CF.");
+  public void Add_CFNeg_FracPos_ResultPos() {
+    var cf         = cfNegFin + fracPosBig; // -10/7 + 22/7 = 12/7
+    var expectedCf = CFraction.FromRational(12, 7);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
   }
 
   [Test]
-  public void MultiplyFrac_Positive_2_1() {
-    var cf         = cfFin1 * (2, 1); // 10/7 * 2/1 = 20/7 = [2; 1, 1, 6]
-    var expectedCf = CFraction.FromRational(20, 7);
-    Assert.That(expectedCf.Equals(cf), "Multiplying by 2/1");
+  public void Add_CFNeg_FracPos_ResultNeg() {
+    var cf         = cfNegFin + frac_1_7; // -10/7 + 1/7 = -9/7
+    var expectedCf = CFraction.FromRational(-9, 7);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
   }
 
   [Test]
-  public void MultiplyFrac_Positive_1_2() {
-    var cf         = cfFin1 * (1, 2); // 10/7 * 1/2 = 10/14 = 5/7
-    var expectedCf = CFraction.FromRational(5, 7);
-    Assert.That(expectedCf.Equals(cf), "Multiplying by 1/2");
+  public void Add_CFNeg_FracPos_ResultZero() {
+    var cf         = cfNegFin + frac_10_7; // -10/7 + 10/7 = 0
+    var expectedCf = CFraction.Zero;
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
   }
 
   [Test]
-  public void MultiplyFrac_Positive_3_2() {
-    var cf         = cfFin1 * (3, 2); // 10/7 * 3/2 = 30/14 = 15/7 = [2; 7]
-    var expectedCf = CFraction.FromRational(15, 7);
-    Assert.That(expectedCf.Equals(cf), "Multiplying by 3/2 (positive fraction > 1)");
+  public void Add_CFNeg_FracNeg() {
+    var cf         = cfNegFin + fracNeg; // -10/7 + (-3/2) = -41/14
+    var expectedCf = CFraction.FromRational(-41, 14);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
   }
 
   [Test]
-  public void MultiplyFrac_Sqrt2_By_2() {
-    var cf = CFraction.Sqrt2 * (2, 1); // Sqrt(2) * 2 = 2*Sqrt(2) = [2; 1, 4, 1, 4, 1, 4, ...]
-    // Используем dedicated generator для 2*Sqrt(2) в тестах
-    var expectedCf = CFraction.FromGenerator(TwoSqrt2TestGenerator());
+  public void Add_CFZero_FracNeg() {
+    var cf         = CFraction.Zero + fracNeg; // 0 + (-3/2) = -3/2
+    var expectedCf = CFraction.FromRational(fracNeg.p, fracNeg.q);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
 
-    // Теперь используем Equals напрямую, полагаясь на comparationCut
-    Assert.That(cf.Equals(expectedCf), "Multiplying Sqrt(2) by 2");
+  [Test]
+  public void Add_FracNeg_CFZero() // Commutativity check
+  {
+    var cf         = fracNeg + CFraction.Zero; // (-3/2) + 0 = -3/2
+    var expectedCf = CFraction.FromRational(fracNeg.p, fracNeg.q);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Add_NegSqrt2_Plus_1() {
+    var cf = -cfSqrt2 + fracOne; // -Sqrt(2) + 1
+    var expectedCf = CFraction.FromGenerator(new int[] { -1, 1, 1 }.Concat(Enumerable.Repeat(2, 100)));
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
   }
 #endregion
 
-#region Division Tests
+#region Subtraction Tests (-)
+  // --- Edge Cases ---
   [Test]
-  public void DivideCF_By_Frac_Positive_2_1() {
-    var r          = cfFin1 / (2, 1); // (10/7) / (2/1) = 10/14 = 5/7 = [0; 1, 2, 3]
-    var expectedCf = CFraction.FromRational(5, 7);
-    Assert.That(expectedCf.Equals(r), "Dividing CF by Frac(2, 1)");
+  public void Sub_CFPos_FracZero() {
+    var cf = cfPosFin - fracZero; // 10/7 - 0 = 10/7
+    Assert.That(cfPosFin.Equals(cf), $"cf = {cf}\nexpected = {cfPosFin}");
   }
 
   [Test]
-  public void DivideCF_By_Frac_Positive_1_2() {
-    var r          = cfFin1 / (1, 2); // (10/7) / (1/2) = 20/7 = [2; 1, 1, 6]
-    var expectedCf = CFraction.FromRational(20, 7);
-    Assert.That(expectedCf.Equals(r), "Dividing CF by Frac(1, 2)");
+  public void Sub_CFZero_FracPos() {
+    var cf         = CFraction.Zero - fracPos; // 0 - 3/2 = -3/2
+    var expectedCf = CFraction.FromRational(-fracPos.p, fracPos.q);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
   }
 
   [Test]
-  public void DivideCF_By_Frac_One() {
-    var r = cfFin1 / (1, 1); // (10/7) / (1/1) = 10/7
-    Assert.That(cfFin1.Equals(r), "Dividing CF by Frac(1, 1) should return the original CF");
+  public void Sub_FracPos_CFZero() {
+    var cf         = fracPos - CFraction.Zero; // 3/2 - 0 = 3/2
+    var expectedCf = CFraction.FromRational(fracPos.p, fracPos.q);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
   }
 
   [Test]
-  public void DivideCF_By_Frac_Infinity() {
-    var r = CFraction.Infinity / (22, 7);
-    Assert.That(CFraction.Infinity.Equals(r), "Dividing Infinity CF by Frac(m, n) should return Infinity CF");
+  public void Sub_CFZero_FracZero() {
+    var cf = CFraction.Zero - fracZero; // 0 - 0 = 0
+    Assert.That(CFraction.Zero.Equals(cf), $"cf = {cf}\nexpected = {CFraction.Zero}");
   }
 
   [Test]
-  public void DivideCF_By_Frac_ZeroDenominator_ThrowsException() {
+  public void Sub_CFInfinity_FracAny() {
+    var cf1 = CFraction.Infinity - fracPos;
+    var cf2 = CFraction.Infinity - fracNeg;
+    Assert.That(CFraction.Infinity.Equals(cf1), $"cf1 = {cf1}\nexpected = {CFraction.Infinity}");
+    Assert.That(CFraction.Infinity.Equals(cf2), $"cf2 = {cf2}\nexpected = {CFraction.Infinity}");
+  }
+
+  [Test]
+  public void Sub_FracAny_CFInfinity() {
+    var cf1 = fracPos - CFraction.Infinity; // 3/2 - Inf = -Inf? (Impl may give Inf)
+    var cf2 = fracNeg - CFraction.Infinity; // -3/2 - Inf = -Inf? (Impl may give Inf)
+    // Assuming Transform gives Infinity for finite - Infinity
+    Assert.That(CFraction.Infinity.Equals(cf1), $"cf1 = {cf1}\nexpected = {CFraction.Infinity}");
+    Assert.That(CFraction.Infinity.Equals(cf2), $"cf2 = {cf2}\nexpected = {CFraction.Infinity}");
+  }
+
+  [Test]
+  public void Sub_CFZero_FracNeg() {
+    var cf         = CFraction.Zero - fracNeg; // 0 - (-3/2) = 3/2
+    var expectedCf = CFraction.FromRational(-fracNeg.p, fracNeg.q);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Sub_FracNeg_CFZero() {
+    var cf         = fracNeg - CFraction.Zero; // -3/2 - 0 = -3/2
+    var expectedCf = CFraction.FromRational(fracNeg.p, fracNeg.q);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+
+  // --- Positive Cases ---
+  [Test]
+  public void Sub_CFPos_FracPos_ResultPos() {
+    var cf         = cfPosFin - fracOne; // 10/7 - 1 = 3/7
+    var expectedCf = CFraction.FromRational(3, 7);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Sub_CFPos_FracPos_ResultNeg() {
+    var cf         = cfPosFin - fracPos; // 10/7 - 3/2 = -1/14
+    var expectedCf = CFraction.FromRational(-1, 14);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Sub_CFPos_FracPos_ResultZero() {
+    var cf         = cfPosFin - frac_10_7; // 10/7 - 10/7 = 0
+    var expectedCf = CFraction.Zero;
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Sub_FracPos_CFPos_ResultPos() {
+    var cf         = fracPosBig - cfPosFin; // 22/7 - 10/7 = 12/7
+    var expectedCf = CFraction.FromRational(12, 7);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Sub_FracPos_CFPos_ResultNeg() {
+    var cf         = fracOne - cfPosFin; // 1 - 10/7 = -3/7
+    var expectedCf = CFraction.FromRational(-3, 7);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Sub_FracPos_CFPos_ResultZero() {
+    var cf         = frac_10_7 - cfPosFin; // 10/7 - 10/7 = 0
+    var expectedCf = CFraction.Zero;
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  // --- Negative Cases ---
+  [Test]
+  public void Sub_CFPos_FracNeg() // Equivalent to Add_CFPos_FracPos
+  {
+    var cf         = cfPosFin - fracNeg; // 10/7 - (-3/2) = 41/14
+    var expectedCf = CFraction.FromRational(41, 14);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Sub_CFNeg_FracPos() // Always negative
+  {
+    var cf         = cfNegFin - fracPos; // -10/7 - 3/2 = -41/14
+    var expectedCf = CFraction.FromRational(-41, 14);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Sub_FracPos_CFNeg() // Equivalent to Add_FracPos_CFPos
+  {
+    var cf         = fracPos - cfNegFin; // 3/2 - (-10/7) = 41/14
+    var expectedCf = CFraction.FromRational(41, 14);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+
+  [Test]
+  public void Sub_CFNeg_FracNeg_ResultPos() {
+    var cf         = cfNegFin - fracNegBig; // -10/7 - (-22/7) = 12/7
+    var expectedCf = CFraction.FromRational(12, 7);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Sub_CFNeg_FracNeg_ResultNeg() {
+    var cf         = cfNegFin - frac_m1_7; // -10/7 - (-1/7) = -9/7
+    var expectedCf = CFraction.FromRational(-9, 7);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Sub_CFNeg_FracNeg_ResultZero() {
+    var cf         = cfNegFin - frac_m10_7; // -10/7 - (-10/7) = 0
+    var expectedCf = CFraction.Zero;
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Sub_FracNeg_CFPos() // Always negative
+  {
+    var cf         = fracNeg - cfPosFin; // -3/2 - 10/7 = -41/14
+    var expectedCf = CFraction.FromRational(-41, 14);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Sub_FracNeg_CFNeg_ResultPos() {
+    var cf         = frac_m1_7 - cfNegFin; // -1/7 - (-10/7) = 9/7
+    var expectedCf = CFraction.FromRational(9, 7);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Sub_FracNeg_CFNeg_ResultNeg() {
+    var cf         = fracNeg - cfNegFin; // -3/2 - (-10/7) = -1/14
+    var expectedCf = CFraction.FromRational(-1, 14);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Sub_FracNeg_CFNeg_ResultZero() {
+    var cf         = frac_m10_7 - cfNegFin; // -10/7 - (-10/7) = 0
+    var expectedCf = CFraction.Zero;
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+#endregion
+
+#region Multiplication Tests (*)
+  // --- Edge Cases ---
+  [Test]
+  public void Mul_CFPos_FracZero() {
+    var cf = cfPosFin * fracZero; // 10/7 * 0 = 0
+    Assert.That(CFraction.Zero.Equals(cf), $"cf = {cf}\nexpected = {CFraction.Zero}");
+  }
+
+  [Test]
+  public void Mul_CFZero_FracPos() {
+    var cf = CFraction.Zero * fracPos; // 0 * 3/2 = 0
+    Assert.That(CFraction.Zero.Equals(cf), $"cf = {cf}\nexpected = {CFraction.Zero}");
+  }
+
+  [Test]
+  public void Mul_CFZero_FracZero() {
+    var cf = CFraction.Zero * fracZero; // 0 * 0 = 0
+    Assert.That(CFraction.Zero.Equals(cf), $"cf = {cf}\nexpected = {CFraction.Zero}");
+  }
+
+  [Test]
+  public void Mul_CFInfinity_FracPos() {
+    var cf = CFraction.Infinity * fracPos; // Inf * 3/2 = Inf
+    Assert.That(CFraction.Infinity.Equals(cf), $"cf = {cf}\nexpected = {CFraction.Infinity}");
+  }
+
+  [Test]
+  public void Mul_CFInfinity_FracNeg() {
+    var cf = CFraction.Infinity * fracNeg; // Inf * -3/2 = Inf
+    Assert.That(CFraction.Infinity.Equals(cf), $"cf = {cf}\nexpected = {CFraction.Infinity}");
+  }
+
+  [Test]
+  public void Mul_CFInfinity_FracZero_Throws() {
+    Assert.Throws<ArgumentException>
+      (
+       ()
+         => {
+         var cf = CFraction.Infinity * fracZero;
+       }
+       // Message remains descriptive for exceptions
+     , "Mul: Infinity * Zero Frac should throw ArgumentException."
+      );
+  }
+
+  // --- Positive Cases ---
+  [Test]
+  public void Mul_CFPos_FracPos() {
+    var cf         = cfPosFin * fracPos; // (10/7) * (3/2) = 15/7
+    var expectedCf = CFraction.FromRational(15, 7);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Mul_FracPos_CFPos() // Commutativity
+  {
+    var cf         = fracPos * cfPosFin; // (3/2) * (10/7) = 15/7
+    var expectedCf = CFraction.FromRational(15, 7);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Mul_CFPos_FracOne() {
+    var cf = cfPosFin * fracOne; // 10/7 * 1 = 10/7
+    Assert.That(cfPosFin.Equals(cf), $"cf = {cf}\nexpected = {cfPosFin}");
+  }
+
+  [Test]
+  public void Mul_Sqrt2_By_2() {
+    var cf         = cfSqrt2 * (2, 1); // Sqrt(2) * 2
+    var expectedCf = CFraction.FromGenerator(TwoSqrt2TestGenerator());
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  // --- Negative Cases ---
+  [Test]
+  public void Mul_CFPos_FracNeg() {
+    var cf         = cfPosFin * fracNeg; // (10/7) * (-3/2) = -15/7
+    var expectedCf = CFraction.FromRational(-15, 7);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Mul_CFNeg_FracPos() {
+    var cf         = cfNegFin * fracPos; // (-10/7) * (3/2) = -15/7
+    var expectedCf = CFraction.FromRational(-15, 7);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Mul_CFNeg_FracNeg() {
+    var cf         = cfNegFin * fracNeg; // (-10/7) * (-3/2) = 15/7
+    var expectedCf = CFraction.FromRational(15, 7);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Mul_CFZero_FracNeg() {
+    var cf = CFraction.Zero * fracNeg; // 0 * (-3/2) = 0
+    Assert.That(CFraction.Zero.Equals(cf), $"cf = {cf}\nexpected = {CFraction.Zero}");
+  }
+
+  [Test]
+  public void Mul_CFNeg_FracZero() {
+    var cf = cfNegFin * fracZero; // (-10/7) * 0 = 0
+    Assert.That(CFraction.Zero.Equals(cf), $"cf = {cf}\nexpected = {CFraction.Zero}");
+  }
+
+  [Test]
+  public void Mul_CFPos_FracNegOne() {
+    var cf         = cfPosFin * fracNegOne; // 10/7 * (-1) = -10/7
+    var expectedCf = cfNegFin;              // Should be exactly the negative counterpart
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Mul_CFNeg_FracNegOne() {
+    var cf         = cfNegFin * fracNegOne; // -10/7 * (-1) = 10/7
+    var expectedCf = cfPosFin;              // Should be exactly the positive counterpart
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+#endregion
+
+#region Division Tests (/)
+  // --- Edge Cases ---
+  [Test]
+  public void Div_CFPos_FracZero_Throws() {
     Assert.Throws<DivideByZeroException>
       (
        ()
          => {
-         var r = cfFin1 / (0, 1);
+         var cf = cfPosFin / fracZero;
        }
-     , "Dividing CF by Frac with zero denominator should throw DivideByZeroException"
+       // Message remains descriptive for exceptions
+     , "Div: CF / Zero Frac should throw"
       );
   }
 
   [Test]
-  public void DivideFrac_By_CF_Positive_2_1() {
-    var r          = (2, 1) / cfFin1; // (2/1) / (10/7) = 14/10 = 7/5 = [1; 2, 2]
-    var expectedCf = CFraction.FromRational(7, 5);
-    Assert.That(expectedCf.Equals(r), "Dividing Frac(2, 1) by CF");
+  public void Div_CFZero_FracPos() {
+    var cf = CFraction.Zero / fracPos; // 0 / (3/2) = 0
+    Assert.That(CFraction.Zero.Equals(cf), $"cf = {cf}\nexpected = {CFraction.Zero}");
   }
 
   [Test]
-  public void DivideFrac_By_CF_Positive_1_2() {
-    var r          = (1, 2) / cfFin1; // (1/2) / (10/7) = 7/20 = [0; 2, 6]
-    var expectedCf = CFraction.FromRational(7, 20);
-    Assert.That(expectedCf.Equals(r), "Dividing Frac(1, 2) by CF");
+  public void Div_CFZero_FracZero_Throws() // 0 / 0
+  {
+    Assert.Throws<DivideByZeroException>
+      (
+       ()
+         => {
+         var cf = CFraction.Zero / fracZero;
+       }
+       // Message remains descriptive for exceptions
+     , "Div: Zero CF / Zero Frac should throw"
+      );
   }
 
   [Test]
-  public void DivideFrac_By_CF_One() {
-    var r          = (1, 1) / cfFin1; // (1/1) / (10/7) = 7/10 = Rcp(10/7)
-    var expectedCf = cfFin1.Rcp();
-    Assert.That(expectedCf.Equals(r), "Dividing Frac(1, 1) by CF should return Rcp(CF)");
+  public void Div_FracPos_CFZero_Throws() {
+    Assert.Throws<DivideByZeroException>
+      (
+       ()
+         => {
+         var cf = fracPos / CFraction.Zero;
+       }
+       // Message remains descriptive for exceptions
+     , "Div: Positive Frac / Zero CF should throw DivideByZeroException."
+      );
   }
 
   [Test]
-  public void DivideFrac_By_CF_Zero() {
-    var r          = (0, 1) / cfFin1; // (0/1) / (10/7) = 0
-    var expectedCf = CFraction.Zero;
-    Assert.That(expectedCf.Equals(r), "Dividing Frac(0, 1) by CF should return Zero CF");
+  public void Div_FracZero_CFPos() // 0 / (10/7) = 0
+  {
+    var cf = fracZero / cfPosFin; // 0 * Rcp(10/7) = 0 * 7/10 = 0
+    Assert.That(CFraction.Zero.Equals(cf), $"cf = {cf}\nexpected = {CFraction.Zero}");
   }
 
   [Test]
-  public void DivideFrac_By_CF_Infinity() {
-    var r          = (22, 7) / CFraction.Infinity;
-    var expectedCf = CFraction.Zero;
-    Assert.That(expectedCf.Equals(r), "Dividing Frac(m, n) by Infinity CF should return Zero CF");
+  public void Div_CFInfinity_FracPos() {
+    var cf = CFraction.Infinity / fracPos; // Inf / (3/2) = Inf * 2/3 = Inf
+    Assert.That(CFraction.Infinity.Equals(cf), $"cf = {cf}\nexpected = {CFraction.Infinity}");
+  }
+
+  [Test]
+  public void Div_CFInfinity_FracNeg() {
+    var cf = CFraction.Infinity / fracNeg; // Inf / (-3/2) = Inf * (-2/3) = Inf
+    Assert.That(CFraction.Infinity.Equals(cf), $"cf = {cf}\nexpected = {CFraction.Infinity}");
+  }
+
+  [Test]
+  public void Div_CFInfinity_FracZero_Throws() // Inf / 0
+  {
+    Assert.Throws<DivideByZeroException>
+      (
+       ()
+         => {
+         var cf = CFraction.Infinity / fracZero;
+       }
+       // Message remains descriptive for exceptions
+     , "Div: Infinity CF / Zero Frac should throw"
+      );
+  }
+
+  // --- Positive Cases ---
+  [Test]
+  public void Div_CFPos_FracPos() {
+    var cf         = cfPosFin / fracPos; // (10/7) / (3/2) = 20/21
+    var expectedCf = CFraction.FromRational(20, 21);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Div_FracPos_CFPos() {
+    var cf         = fracPos / cfPosFin; // (3/2) / (10/7) = 21/20
+    var expectedCf = CFraction.FromRational(21, 20);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Div_CFPos_FracOne() {
+    var cf = cfPosFin / fracOne; // 10/7 / 1 = 10/7
+    Assert.That(cfPosFin.Equals(cf), $"cf = {cf}\nexpected = {cfPosFin}");
+  }
+
+  [Test]
+  public void Div_FracOne_CFPos() // 1 / CF = Rcp(CF)
+  {
+    var cf         = fracOne / cfPosFin; // 1 / (10/7) = 7/10
+    var expectedCf = cfPosFin.Rcp();
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  // --- Negative Cases ---
+  [Test]
+  public void Div_CFPos_FracNeg() {
+    var cf         = cfPosFin / fracNeg; // (10/7) / (-3/2) = -20/21
+    var expectedCf = CFraction.FromRational(-20, 21);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Div_CFNeg_FracPos() {
+    var cf         = cfNegFin / fracPos; // (-10/7) / (3/2) = -20/21
+    var expectedCf = CFraction.FromRational(-20, 21);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Div_CFNeg_FracNeg() {
+    var cf         = cfNegFin / fracNeg; // (-10/7) / (-3/2) = 20/21
+    var expectedCf = CFraction.FromRational(20, 21);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Div_FracPos_CFNeg() {
+    var cf         = fracPos / cfNegFin; // (3/2) / (-10/7) = -21/20
+    var expectedCf = CFraction.FromRational(-21, 20);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Div_FracNeg_CFPos() {
+    var cf         = fracNeg / cfPosFin; // (-3/2) / (10/7) = -21/20
+    var expectedCf = CFraction.FromRational(-21, 20);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Div_FracNeg_CFNeg() {
+    var cf         = fracNeg / cfNegFin; // (-3/2) / (-10/7) = 21/20
+    var expectedCf = CFraction.FromRational(21, 20);
+    Assert.That(expectedCf.Equals(cf), $"cf = {cf}\nexpected = {expectedCf}");
+  }
+
+  [Test]
+  public void Div_CFZero_FracNeg() {
+    var cf = CFraction.Zero / fracNeg; // 0 / (-3/2) = 0
+    Assert.That(CFraction.Zero.Equals(cf), $"cf = {cf}\nexpected = {CFraction.Zero}");
+  }
+
+  [Test]
+  public void Div_FracZero_CFNeg() // 0 / (-10/7) = 0
+  {
+    var cf = fracZero / cfNegFin; // 0 * Rcp(-10/7) = 0 * (-7/10) = 0
+    Assert.That(CFraction.Zero.Equals(cf), $"cf = {cf}\nexpected = {CFraction.Zero}");
   }
 #endregion
 
-#region Generators for Tests
-  // 2*Sqrt(2)
+#region Generators for Tests (Helper)
+  // 2*Sqrt(2) = [2; 1, 4, 1, 4, ...]
   private static IEnumerable<int> TwoSqrt2TestGenerator() {
     yield return 2;
 
