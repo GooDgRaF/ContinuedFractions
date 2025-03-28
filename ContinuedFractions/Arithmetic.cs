@@ -4,19 +4,17 @@ using System.Numerics;
 
 namespace ContinuedFractions;
 
-public partial struct CFraction :
-  IUnaryNegationOperators<CFraction, CFraction> ,
-  IUnaryPlusOperators<CFraction, CFraction> {
+public partial class CFraction : IUnaryNegationOperators<CFraction, CFraction>, IUnaryPlusOperators<CFraction, CFraction> {
 
   private static readonly int[] zeroForRcp = new int[] { 0 };
 
-  public CFraction Rcp() {
+  public CFraction Rcp() { //reciprocal
     return this[0] switch
              {
                null => FromRational(0, 1)                     // 1/inf --> 0
              , 0    => FromGenerator(this.Skip(1))            // 1/[0;a0,a1,..] --> [a0;a1,...]
              , > 0  => FromGenerator(zeroForRcp.Concat(this)) // 1/[a0;a1,...] --> [0;a0,a1,..]
-             , _    => throw new NotImplementedException("я хз что делать с отрицательными числами пока что")
+             , < 0  => -(-this).Rcp()                         // todo: можно ли лучше, чем в две промежуточные непрерывные дроби?
              };
   }
 
@@ -24,6 +22,25 @@ public partial struct CFraction :
   public static CFraction operator +(CFraction cf) => cf;
 
   public static CFraction operator -(CFraction cf) => cf.Transform(-1, 0, 0, 1);
+
+  // public static CFraction operator -(CFraction cf) {
+  //   if (cf[0] is null) { // -inf = inf
+  //     return Infinity;
+  //   }
+  //   int val0 = (int)cf[0]!;
+  //   if (cf._cfEnumerator is null && cf._cfCashed.Count == 1) {
+  //     return cf[0] == 0 ? Zero : new CFraction(new int[] { -val0 }); // -0 = 0, -a = a
+  //   }
+  //
+  //   int val1 = (int)cf[1]!;
+  //
+  //   return FromGenerator(new int[] { -val0 - 1, 1, val1 - 1 }.Concat(cf.Skip(2)));
+  // } // todo: подумать, лучше как сейчас через постоянное умножение, или вот так, но тогда надо решить проблему:
+  // CFraction cf = CFraction.FromRational(10,7);
+  // Console.WriteLine($"{cf}");                   [1;2,3]
+  // Console.WriteLine($"{-cf}");                  [-2;1,1,3]
+  // Console.WriteLine($"{-(-cf)}");               [1;1,0,1,3]
+  // Console.WriteLine($"({-(-(-cf))})");          [-2;1,0,0,1,3]
 #endregion
 
 
@@ -45,7 +62,13 @@ public partial struct CFraction :
     return cf.Transform(frac.q, 0, 0, frac.p);
   }
 
-  public static CFraction operator /(Frac frac, CFraction cf) => frac * cf.Rcp();
+  public static CFraction operator /(Frac frac, CFraction cf) {
+    if (cf.Equals(Zero)) {
+      throw new DivideByZeroException("Division by zero in: Frac / CFraction.");
+    }
+
+    return frac * cf.Rcp();
+  }
 #endregion
 
 #region Int
@@ -72,6 +95,8 @@ public partial struct CFraction :
   /// <param name="d"></param>
   /// <returns></returns>
   public CFraction Transform(int a, int b, int c, int d) => new CFraction(CF_transform_main(new Matrix22(a, b, c, d)));
+
+  private CFraction IdTransform() => Transform(1, 0, 0, 1);
 
   private IEnumerable<int> CF_transform_main(Matrix22 init) {
     Matrix22 m = init;
