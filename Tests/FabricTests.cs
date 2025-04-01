@@ -20,8 +20,8 @@ public class FactoryTests {
   // --- Вспомогательный метод для сообщений об ошибках при сравнении дробей ---
   private string FormatFailMessage(CFraction expected, CFraction actual, string description) {
     // Используем ToString() дробей для сообщения
-    string expectedStr = expected?.ToString() ?? "<null>";
-    string actualStr   = actual?.ToString() ?? "<null>";
+    string expectedStr = expected.ToString();
+    string actualStr   = actual.ToString();
 
     return $"{description} failed.\nExpected Fraction: {expectedStr}\nActual Fraction:   {actualStr}";
   }
