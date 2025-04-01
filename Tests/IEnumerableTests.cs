@@ -1,9 +1,4 @@
-﻿using NUnit.Framework;
-using ContinuedFractions;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Tests;
+﻿namespace Tests;
 
 [TestFixture]
 public class EnumerableTests {
@@ -87,70 +82,66 @@ public class EnumerableTests {
     Assert.That(actualCoeffs, Is.EqualTo(expectedCoeffs), "Coefficients collected with manual MoveNext should be correct");
   }
 
- #region Cache and Enumerable Interaction Tests
+#region Cache and Enumerable Interaction Tests
+  [Test]
+  public void Enumerable_PartialCache_FullIteration() {
+    CFraction fraction      = CFraction.E;
+    var       _             = fraction[1];
+    List<int> actualCoeffs  = new List<int>();
+    int       expectedCount = 10;
 
-        [Test]
-        public void Enumerable_PartialCache_FullIteration()
-        {
-            CFraction fraction = CFraction.E;
-            var _ = fraction[1];
-            List<int> actualCoeffs = new List<int>();
-            int expectedCount = 10;
+    foreach (int coeff in fraction.Take(expectedCount)) {
+      actualCoeffs.Add(coeff);
+    }
 
-            foreach (int coeff in fraction.Take(expectedCount))
-            {
-                actualCoeffs.Add(coeff);
-            }
+    List<int> expectedCoeffs = CFraction.EGenerator().Take(expectedCount).ToList();
+    Assert.That
+      (actualCoeffs, Is.EqualTo(expectedCoeffs), "Full iteration after partial cache should return correct coefficients");
+  }
 
-            List<int> expectedCoeffs = CFraction.EGenerator().Take(expectedCount).ToList();
-            Assert.That(actualCoeffs, Is.EqualTo(expectedCoeffs), "Full iteration after partial cache should return correct coefficients");
-        }
+  [Test]
+  public void Enumerable_CacheExpansionDuringIteration() {
+    CFraction fraction       = CFraction.FromRational(142, 43); // [3; 3, 3, 4]
+    List<int> actualCoeffs   = new List<int>();
+    List<int> expectedCoeffs = new List<int> { 3, 3, 3, 4 };
 
-        [Test]
-        public void Enumerable_CacheExpansionDuringIteration()
-        {
-            CFraction fraction = CFraction.FromRational(142, 43); // [3; 3, 3, 4]
-            List<int> actualCoeffs = new List<int>();
-            List<int> expectedCoeffs = new List<int> { 3, 3, 3, 4 };
+    foreach (int coeff in fraction) {
+      actualCoeffs.Add(coeff);
+    }
 
-            foreach (int coeff in fraction)
-            {
-                actualCoeffs.Add(coeff);
-            }
+    Assert.That(actualCoeffs, Is.EqualTo(expectedCoeffs), "Iteration should expand cache and return all coefficients");
+    Assert.That(fraction[3], Is.EqualTo(4), "Cache should be fully populated after iteration");
+  }
 
-            Assert.That(actualCoeffs, Is.EqualTo(expectedCoeffs), "Iteration should expand cache and return all coefficients");
-            Assert.That(fraction[3], Is.EqualTo(4), "Cache should be fully populated after iteration");
-        }
+  [Test]
+  public void Enumerable_IterationAfterIndexerAccess() {
+    CFraction fraction = CFraction.FromRational(355, 113); // [3; 7, 16]
+    _ = fraction[2];
+    _ = fraction[0];
+    _ = fraction[1];
 
-        [Test]
-        public void Enumerable_IterationAfterIndexerAccess()
-        {
-            CFraction fraction = CFraction.FromRational(355, 113); // [3; 7, 16]
-            _ = fraction[2];
-            _ = fraction[0];
-            _ = fraction[1];
+    List<int> actualCoeffs = new List<int>();
+    foreach (int coeff in fraction) {
+      actualCoeffs.Add(coeff);
+    }
+    List<int> expectedCoeffs = new List<int> { 3, 7, 16 };
+    Assert.That(actualCoeffs, Is.EqualTo(expectedCoeffs), "Iteration after indexer access should return correct coefficients");
+  }
 
-            List<int> actualCoeffs = new List<int>();
-            foreach (int coeff in fraction)
-            {
-                actualCoeffs.Add(coeff);
-            }
-            List<int> expectedCoeffs = new List<int> { 3, 7, 16 };
-            Assert.That(actualCoeffs, Is.EqualTo(expectedCoeffs), "Iteration after indexer access should return correct coefficients");
-        }
+  [Test]
+  public void Enumerable_PartialIteration_WithCaching() {
+    CFraction fraction = CFraction.E;
+    _ = fraction.Take(5);
 
-        [Test]
-        public void Enumerable_PartialIteration_WithCaching()
-        {
-            CFraction fraction = CFraction.E;
-            _ = fraction.Take(5);
-
-            List<int> nextCoeffs         = fraction.Skip(5).Take(5).ToList();
-            List<int> expectedNextCoeffs = CFraction.EGenerator().Take(10).Skip(5).ToList();
-            Assert.That(nextCoeffs, Is.EqualTo(expectedNextCoeffs), "Subsequent iteration should return correct coefficients after initial caching");
-        }
-
-
-        #endregion
+    List<int> nextCoeffs         = fraction.Skip(5).Take(5).ToList();
+    List<int> expectedNextCoeffs = CFraction.EGenerator().Take(10).Skip(5).ToList();
+    Assert.That
+      (
+       nextCoeffs
+     , Is.EqualTo(expectedNextCoeffs)
+     , "Subsequent iteration should return correct coefficients after initial caching"
+      );
+  }
+#endregion
 
 }
