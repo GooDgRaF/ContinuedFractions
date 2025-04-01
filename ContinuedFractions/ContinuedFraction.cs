@@ -82,16 +82,7 @@ public partial class CFraction : IEnumerable<int> {
       throw new ArgumentException("Can't handle the 0/0 fraction!");
     }
 
-    int sign = numerator.Sign * denominator.Sign;
-
-    numerator   = BigInteger.Abs(numerator);
-    denominator = BigInteger.Abs(denominator);
-
-    return sign switch
-             {
-               < 0 => new CFraction(RationalGenerator(-numerator, denominator)).IdTransform()
-             , _   => new CFraction(RationalGenerator(numerator, denominator))
-             };
+    return new CFraction(RationalGenerator(numerator, denominator));
   }
 
   public static CFraction FromCoeffs(IList<int> cf) {
@@ -119,7 +110,8 @@ public partial class CFraction : IEnumerable<int> {
     StringBuilder res = new StringBuilder("[");
 
     // Берем только до 40 элементов для отображения: чтобы по абсолютной точности соответствовать типу double
-    var elementsToString = this.Take(41).ToList();
+    const int count             = 40;
+    var elementsToString = this.Take(count+1).ToList();
 
     if (elementsToString.Count == 0) {
       return res.Append(']').ToString();
@@ -135,7 +127,7 @@ public partial class CFraction : IEnumerable<int> {
 
     res.Append(';'); // Добавляем точку с запятой после первого члена
 
-    var remainingElements = elementsToString.Skip(1).Take(39);
+    var remainingElements = elementsToString.Skip(1).Take(count);
 
     bool isFirst = true;
     foreach (var coefficient in remainingElements) {
@@ -149,7 +141,7 @@ public partial class CFraction : IEnumerable<int> {
     }
 
     // Если у нас 41-ый элемент существует, значит последовательность может быть длиннее
-    if (elementsToString.Count > 40) {
+    if (elementsToString.Count > count) {
       res.Append(",...");
     }
 
@@ -162,7 +154,8 @@ public partial class CFraction : IEnumerable<int> {
 #region Static
   private static IEnumerable<int> RationalGenerator(BigInteger numerator, BigInteger denominator) {
     while (denominator != 0) {
-      BigInteger quotient = BigInteger.DivRem(numerator, denominator, out BigInteger remainder);
+      BigInteger quotient  = GosperMatrix.FloorDiv(numerator, denominator);
+      BigInteger remainder = numerator - quotient * denominator;
       if (quotient < int.MinValue || quotient > int.MaxValue) {
         throw new OverflowException("Coefficient is out of range for int.");
       }
