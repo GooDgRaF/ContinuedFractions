@@ -6,7 +6,7 @@ public partial class CFraction {
   public static CFraction Sqrt2    = new CFraction(Sqrt2Generator());
   public static CFraction Infinity = new CFraction(new int[] { });
   public static CFraction Zero     = new CFraction(new int[] { 0 });
-
+  public static CFraction One      = new CFraction(new int[] { 1 });
 
   public static IEnumerable<int> EGenerator() {
     yield return 2;
