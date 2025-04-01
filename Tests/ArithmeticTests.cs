@@ -1,7 +1,7 @@
 ﻿namespace Tests;
 
 [TestFixture]
-public class ArithmeticTests {
+public class CF_Frac_ArithmeticTests {
 
   // Базовые дроби для тестов
   public static CFraction cfPosFin      = CFraction.FromRational(10, 7);  // [1; 2, 3]
