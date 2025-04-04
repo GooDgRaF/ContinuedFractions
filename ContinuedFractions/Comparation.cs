@@ -1,15 +1,17 @@
 ﻿namespace ContinuedFractions;
 
-public partial class CFraction : IComparable<CFraction>, IEquatable<CFraction> {
+public partial class CFraction : IComparable<CFraction>, IEquatable<CFraction>, IComparisonOperators<CFraction, CFraction, bool> {
 
-  private const int comparationCut = 41;
+  public int CompareTo(CFraction? other) {
+    if (other is null) {
+      return 1;
+    }
 
-
-  public int CompareTo(CFraction other) { // A < B <==> lexmin([a0;-a1,a2,-a3,...,a2k,-a(2k+1),...], [b0;-b1,b2,-b3,...,b2k,-b(2k+1),...])
+    // A < B <==> isLexmin([a0;-a1,a2,-a3,...,a2k,-a(2k+1),...], [b0;-b1,b2,-b3,...,b2k,-b(2k+1),...])
     int i = 0;
-    while (i < comparationCut) {
-      int? val1 = this[i];
-      int? val2 = other[i];
+    while (i <= numberOfCoeffs) {
+      BigInteger? val1 = this[i];
+      BigInteger? val2 = other[i];
 
       if (val1 == null && val2 == null) {
         return 0;
@@ -42,16 +44,39 @@ public partial class CFraction : IComparable<CFraction>, IEquatable<CFraction> {
     return 0;
   }
 
-  public bool Equals(CFraction other) => this.CompareTo(other) == 0;
+  public bool Equals(CFraction? other) => this.CompareTo(other) == 0;
 
-  public static bool operator ==(CFraction left, CFraction right) { return left.Equals(right); }
+  public static bool operator ==(CFraction? left, CFraction? right) {
+    if (left is null && right is null) {
+      return true;
+    }
 
-  public static bool operator !=(CFraction left, CFraction right) { return !(left == right); }
+    if (left is null || right is null) {
+      return false;
+    }
+
+    return left.Equals(right);
+  }
+
+  public static bool operator !=(CFraction? left, CFraction? right) { return !(left == right); }
 
   public override bool Equals(object? obj) { return obj is CFraction other && Equals(other); }
 
-  public override int GetHashCode() { // можно договориться, что кэш берём с первых 40 элементов
-    throw new NotImplementedException();
+  public override int GetHashCode() {
+    if (this == Infinity) {
+      return int.MaxValue;
+    }
+    HashCode hash = new HashCode();
+    foreach (int term in this.Take(numberOfCoeffs)) {
+      hash.Add(term);
+    }
+
+    return hash.ToHashCode();
   }
+
+  public static bool operator >(CFraction  left, CFraction right) => left.CompareTo(right) > 0;
+  public static bool operator >=(CFraction left, CFraction right) => left.CompareTo(right) >= 0;
+  public static bool operator <(CFraction  left, CFraction right) => left.CompareTo(right) < 0;
+  public static bool operator <=(CFraction left, CFraction right) => left.CompareTo(right) <= 0;
 
 }

@@ -1,22 +1,21 @@
-﻿using System.Numerics;
-using System;
-using System.Collections.Generic; // Для List в проверке знака
-using System.Diagnostics.CodeAnalysis; // Для NotNullWhen
+﻿namespace ContinuedFractions;
+
+using System.Diagnostics.CodeAnalysis;
 
 public class GosperMatrix
 {
-    public readonly BigInteger A, B, C, D;
-    public readonly BigInteger E, F, G, H;
+    internal readonly BigInteger A, B, C, D;
+    internal readonly BigInteger E, F, G, H;
 
-    public GosperMatrix(BigInteger a, BigInteger b, BigInteger c, BigInteger d,
-                        BigInteger e, BigInteger f, BigInteger g, BigInteger h)
+    private GosperMatrix(BigInteger a, BigInteger b, BigInteger c, BigInteger d,
+                         BigInteger e, BigInteger f, BigInteger g, BigInteger h)
     {
         A = a; B = b; C = c; D = d;
         E = e; F = f; G = g; H = h;
     }
 
     // --- Методы IngestX, IngestY, Produce на BigInteger ---
-    public GosperMatrix IngestX(int term)
+    public GosperMatrix IngestX(BigInteger term)
     {
         BigInteger bigTerm = term;
         BigInteger nextA = A * bigTerm + C;
@@ -30,7 +29,7 @@ public class GosperMatrix
         return new GosperMatrix(nextA, nextB, nextC, nextD, nextE, nextF, nextG, nextH);
     }
 
-     public GosperMatrix IngestY(int term)
+     public GosperMatrix IngestY(BigInteger term)
     {
         BigInteger bigTerm = term;
         BigInteger nextA = A * bigTerm + B;
@@ -96,7 +95,7 @@ public class GosperMatrix
         }
 
         // Собираем ненулевые коэффициенты знаменателя для проверки знака
-        var denSigns = new List<int>();
+        var denSigns = new List<BigInteger>();
         if (ep != 0) denSigns.Add(ep.Sign);
         if (fp != 0) denSigns.Add(fp.Sign);
         if (gp != 0) denSigns.Add(gp.Sign);
@@ -105,7 +104,7 @@ public class GosperMatrix
         // Если есть и положительные, и отрицательные -> возможна смена знака -> нельзя определить q
         bool hasPositive = false;
         bool hasNegative = false;
-        foreach (int sign in denSigns)
+        foreach (BigInteger sign in denSigns)
         {
             if (sign > 0) hasPositive = true;
             if (sign < 0) hasNegative = true;

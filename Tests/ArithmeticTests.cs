@@ -69,7 +69,7 @@ public class CF_Frac_ArithmeticTests {
   [Test]
   public void Rcp_Positive_Irrational_Sqrt2() {
     var rcp        = cfSqrt2.Rcp(); // Rcp([1; 2, 2...]) = [0; 1, 2, 2...]
-    var expectedCf = CFraction.FromGenerator(new int[] { 0 }.Concat(cfSqrt2));
+    var expectedCf = CFraction.FromGenerator(new BigInteger[] { 0 }.Concat(cfSqrt2));
     Assert.That(expectedCf.Equals(rcp), $"rcp = {rcp}\nexpected = {expectedCf}");
   }
 

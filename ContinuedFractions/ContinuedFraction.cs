@@ -1,29 +1,29 @@
 ﻿using System.Collections;
 using System.Diagnostics;
-using System.Numerics;
 using System.Text;
-using System.Diagnostics.CodeAnalysis;
 
 
 namespace ContinuedFractions;
 
 /// <summary>
-/// [not?] Lazy continued fractions of the maximal int.MaxValue length [ :( ]
+/// [not?] Lazy continued fractions of the maximal BigInteger.MaxValue length [ :( ]
 /// </summary>
-public partial class CFraction : IEnumerable<int> {
+public partial class CFraction : IEnumerable<BigInteger> {
+
+  private const int numberOfCoeffs = 40; // 40 хватает для точности double
 
 #region Data and Constructors
-  private          IEnumerator<int>? _cfEnumerator; // "Правило" для получения следующего коэффициента бесконечной дроби
-  private readonly List<int>         _cfCashed;     // Конечные непрерывные дроби лежат тут целиком
+  private          IEnumerator<BigInteger>? _cfEnumerator; // "Правило" для получения следующего коэффициента бесконечной дроби
+  private readonly List<BigInteger>         _cfCashed;     // Конечные непрерывные дроби лежат тут целиком
 
-  private CFraction(List<int> cf) {
+  private CFraction(List<BigInteger> cf) {
     _cfCashed     = cf;
     _cfEnumerator = null;
   }
 
-  private CFraction(IEnumerable<int> cf) {
+  private CFraction(IEnumerable<BigInteger> cf) {
     _cfEnumerator = cf.GetEnumerator();
-    _cfCashed     = new List<int>();
+    _cfCashed     = new List<BigInteger>();
 
     if (_cfEnumerator.MoveNext()) {
       _cfCashed.Add(_cfEnumerator.Current);
@@ -43,7 +43,7 @@ public partial class CFraction : IEnumerable<int> {
 #endregion
 
 #region Indexer
-  public int? this[int i] {
+  public BigInteger? this[int i] {
     get
       {
         Debug.Assert(i >= 0, $"Index should be non negative. Found: i = {i}");
@@ -55,7 +55,7 @@ public partial class CFraction : IEnumerable<int> {
       }
   }
 
-  private bool CacheUpToIndex(int i) {
+  private bool CacheUpToIndex(BigInteger i) {
     while (_cfCashed.Count <= i + 2 && _cfEnumerator is not null) {
       if (!_cfEnumerator.MoveNext()) {
         _cfEnumerator.Dispose();
@@ -85,8 +85,10 @@ public partial class CFraction : IEnumerable<int> {
     return new CFraction(RationalGenerator(numerator, denominator));
   }
 
-  public static CFraction FromCoeffs(IList<int> cf) {
-    List<int> r = cf.ToList();
+  public static CFraction FromCoeffs(IList<int> cf) => FromCoeffs(cf.Select(v => (BigInteger)v).ToArray());
+
+  public static CFraction FromCoeffs(IList<BigInteger> cf) {
+    List<BigInteger> r = cf.ToList();
     if (r.Skip(1).Any(c => c < 1)) {
       throw new ArgumentException
         ("There should be all coefficients of the continued function (after the first one) greater than zero!");
@@ -102,16 +104,15 @@ public partial class CFraction : IEnumerable<int> {
     return new CFraction(r);
   }
 
-  public static CFraction FromGenerator(IEnumerable<int> cf) => new CFraction(cf);
+  public static CFraction FromGenerator(IEnumerable<BigInteger> cf) => new CFraction(cf);
+  public static CFraction FromGenerator(IEnumerable<int>        cf) => new CFraction(cf.Select(v => (BigInteger)v));
 #endregion
 
 #region Overrides
   public override string ToString() {
     StringBuilder res = new StringBuilder("[");
 
-    // Берем только до 40 элементов для отображения: чтобы по абсолютной точности соответствовать типу double
-    const int count             = 40;
-    var elementsToString = this.Take(count+1).ToList();
+    var elementsToString = this.Take(numberOfCoeffs + 1).ToList();
 
     if (elementsToString.Count == 0) {
       return res.Append(']').ToString();
@@ -127,7 +128,7 @@ public partial class CFraction : IEnumerable<int> {
 
     res.Append(';'); // Добавляем точку с запятой после первого члена
 
-    var remainingElements = elementsToString.Skip(1).Take(count);
+    var remainingElements = elementsToString.Skip(1).Take(numberOfCoeffs);
 
     bool isFirst = true;
     foreach (var coefficient in remainingElements) {
@@ -141,7 +142,7 @@ public partial class CFraction : IEnumerable<int> {
     }
 
     // Если у нас 41-ый элемент существует, значит последовательность может быть длиннее
-    if (elementsToString.Count > count) {
+    if (elementsToString.Count > numberOfCoeffs) {
       res.Append(",...");
     }
 
@@ -152,15 +153,12 @@ public partial class CFraction : IEnumerable<int> {
 #endregion
 
 #region Static
-  private static IEnumerable<int> RationalGenerator(BigInteger numerator, BigInteger denominator) {
+  private static IEnumerable<BigInteger> RationalGenerator(BigInteger numerator, BigInteger denominator) {
     while (denominator != 0) {
       BigInteger quotient  = GosperMatrix.FloorDiv(numerator, denominator);
       BigInteger remainder = numerator - quotient * denominator;
-      if (quotient < int.MinValue || quotient > int.MaxValue) {
-        throw new OverflowException("Coefficient is out of range for int.");
-      }
 
-      yield return (int)quotient;
+      yield return quotient;
 
       numerator   = denominator;
       denominator = remainder;
@@ -168,8 +166,8 @@ public partial class CFraction : IEnumerable<int> {
   }
 #endregion
 
-#region IEnumerable<int> implementation
-  private class CFEnumerator : IEnumerator<int> {
+#region IEnumerable<BigInteger> implementation
+  private class CFEnumerator : IEnumerator<BigInteger> {
 
     private readonly CFraction _cf;
 
@@ -183,7 +181,7 @@ public partial class CFraction : IEnumerable<int> {
       return _cf.CacheUpToIndex(_index);
     }
 
-    public int Current => _cf._cfCashed[_index];
+    public BigInteger Current => _cf._cfCashed[_index];
 
     object IEnumerator.Current => Current;
 
@@ -193,7 +191,7 @@ public partial class CFraction : IEnumerable<int> {
 
   }
 
-  public IEnumerator<int> GetEnumerator() { return new CFEnumerator(this); }
+  public IEnumerator<BigInteger> GetEnumerator() { return new CFEnumerator(this); }
 
   IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
 #endregion

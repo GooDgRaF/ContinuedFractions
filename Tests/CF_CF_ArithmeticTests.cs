@@ -11,7 +11,7 @@ public class CF_CF_ArithmeticTests {
   public static readonly CFraction cfZero     = CFraction.Zero;
   public static readonly CFraction cfOne      = CFraction.One;
   public static readonly CFraction cfMinusOne = -CFraction.One;
-  public static readonly CFraction cfTwo      = CFraction.FromCoeffs(new int[] { 2 });
+  public static readonly CFraction cfTwo      = CFraction.FromCoeffs(new BigInteger[] { 2 });
   public static readonly CFraction cfInfinity = CFraction.Infinity; // Предполагаем, что это []
   public static readonly CFraction cfE        = CFraction.E;
   public static readonly CFraction cfSqrt2    = CFraction.Sqrt2;
@@ -172,7 +172,7 @@ public class CF_CF_ArithmeticTests {
     Assert.That(actual, Is.EqualTo(expected), FormatFailMessage(expected, actual, "1 + Sqrt2"));
   }
 
-  private static IEnumerable<int> Gen_2_222() {
+  private static IEnumerable<BigInteger> Gen_2_222() {
     yield return 2;
 
     while (true)
@@ -184,7 +184,7 @@ public class CF_CF_ArithmeticTests {
     var expectedApprox =
       CFraction.FromCoeffs
         (
-         new int[]
+         new BigInteger[]
            {
              4, 6, 1, 4, 4, 443, 1, 1, 1, 1, 2, 1, 4, 1, 1, 3, 1, 1, 1, 1
            , 2, 1, 2, 4, 18, 1, 3, 1, 15, 1, 22, 12, 3, 1, 1, 4, 97, 1, 2, 1
@@ -200,7 +200,7 @@ public class CF_CF_ArithmeticTests {
     var expectedApprox =
       CFraction.FromCoeffs
         (
-         new int[]
+         new BigInteger[]
            {
              4, 6, 1, 4, 4, 443, 1, 1, 1, 1, 2, 1, 4, 1, 1, 3, 1, 1, 1, 1
            , 2, 1, 2, 4, 18, 1, 3, 1, 15, 1, 22, 12, 3, 1, 1, 4, 97, 1, 2, 1
@@ -220,7 +220,7 @@ public class CF_CF_ArithmeticTests {
     Assert.That(actual, Is.EqualTo(expected), FormatFailMessage(expected, actual, "Sqrt2 + Sqrt2"));
   }
 
-  private static IEnumerable<int> Gen_2_1414() {
+  private static IEnumerable<BigInteger> Gen_2_1414() {
     yield return 2;
 
     while (true) {
@@ -236,7 +236,7 @@ public class CF_CF_ArithmeticTests {
     var expectedApprox =
       CFraction.FromCoeffs
         (
-         new int[]
+         new BigInteger[]
            {
              5, 2, 3, 2, 3, 1, 2, 1, 3, 4, 3, 1, 4, 1, 3, 6, 3, 1, 6, 1
            , 3, 8, 3, 1, 8, 1, 3, 10, 3, 1, 10, 1, 3, 12, 3, 1, 12, 1, 3, 14
@@ -415,7 +415,7 @@ public class CF_CF_ArithmeticTests {
 
   // --- Конечная - Бесконечная ---
   // Генераторы для периодических дробей
-  private static IEnumerable<int> Gen_m1_222() {
+  private static IEnumerable<BigInteger> Gen_m1_222() {
     yield return -1;
     yield return 1;
     yield return 1;
@@ -424,7 +424,7 @@ public class CF_CF_ArithmeticTests {
       yield return 2;
   }
 
-  private static IEnumerable<int> Gen_0_222() {
+  private static IEnumerable<BigInteger> Gen_0_222() {
     yield return 0;
 
     while (true)
@@ -452,7 +452,7 @@ public class CF_CF_ArithmeticTests {
     var expectedApprox =
       CFraction.FromCoeffs
         (
-         new int[]
+         new BigInteger[]
            {
              -2, 1, 2, 2, 4, 1, 2, 9, 8, 1, 19, 1, 1, 14, 1, 1, 12, 1, 1, 11
            , 1, 1, 1, 18, 2, 1, 2, 2, 4, 22, 1, 3, 1, 8, 1, 1, 9, 2, 1, 1
@@ -468,7 +468,7 @@ public class CF_CF_ArithmeticTests {
     var expectedApprox =
       CFraction.FromCoeffs
         (
-         new int[]
+         new BigInteger[]
            {
              1, 3, 2, 4, 1, 2, 9, 8, 1, 19, 1, 1, 14, 1, 1, 12, 1, 1, 11, 1
            , 1, 1, 18, 2, 1, 2, 2, 4, 22, 1, 3, 1, 8, 1, 1, 9, 2, 1, 1, 3
@@ -502,7 +502,7 @@ public class CF_CF_ArithmeticTests {
     var expectedApprox =
       CFraction.FromCoeffs
         (
-         new int[]
+         new BigInteger[]
            {
              1, 3, 3, 2, 6, 3, 17, 1, 1, 3, 3, 1, 8, 2, 20, 2, 6, 1, 1, 2
            , 1, 38, 8, 17, 1, 1, 1, 2, 1, 2, 3, 1, 1, 1, 3, 17, 65, 1, 2, 2
@@ -518,7 +518,7 @@ public class CF_CF_ArithmeticTests {
     var expectedApprox =
       CFraction.FromCoeffs
         (
-         new int[]
+         new BigInteger[]
            {
              -2, 1, 2, 3, 2, 6, 3, 17, 1, 1, 3, 3, 1, 8, 2, 20, 2, 6, 1, 1
            , 2, 1, 38, 8, 17, 1, 1, 1, 2, 1, 2, 3, 1, 1, 1, 3, 17, 65, 1, 2
@@ -715,7 +715,7 @@ public class CF_CF_ArithmeticTests {
     var expectedApprox =
       CFraction.FromCoeffs
         (
-         new int[]
+         new BigInteger[]
            {
              3, 1, 7, 1, 1, 3, 3, 2, 30, 2, 10, 1, 1, 1, 1, 1, 5, 51, 4, 1
            , 2, 14, 2, 1, 3, 1, 1, 1, 2, 4, 2, 4, 12, 4, 6, 34, 1, 9, 1, 2
@@ -731,7 +731,7 @@ public class CF_CF_ArithmeticTests {
     var expectedApprox =
       CFraction.FromCoeffs
         (
-         new int[]
+         new BigInteger[]
            {
              3, 1, 7, 1, 1, 3, 3, 2, 30, 2, 10, 1, 1, 1, 1, 1, 5, 51, 4, 1
            , 2, 14, 2, 1, 3, 1, 1, 1, 2, 4, 2, 4, 12, 4, 6, 34, 1, 9, 1, 2
@@ -748,7 +748,7 @@ public class CF_CF_ArithmeticTests {
     var expectedApprox =
       CFraction.FromCoeffs
         (
-         new int[]
+         new BigInteger[]
            {
              -4, 8, 1, 1, 3, 3, 2, 30, 2, 10, 1, 1, 1, 1, 1, 5, 51, 4, 1, 2
            , 14, 2, 1, 3, 1, 1, 1, 2, 4, 2, 4, 12, 4, 6, 34, 1, 9, 1, 2, 1
@@ -770,12 +770,20 @@ public class CF_CF_ArithmeticTests {
   }
 
   [Test]
+  public void Multiply_Sqrt2_Sqrt2_Approx() {
+    // Sqrt2 * Sqrt2 = 2
+    var expected = 2;
+    var actual   = cfSqrt2 * cfSqrt2;
+    Assert.That((double)actual, Is.EqualTo(expected), "cfSqrt2 * cfSqrt2 ~= 2");
+  }
+
+  [Test]
   public void Multiply_E_E() {
     // e * e = e^2 ~= 7.389... = [7; 2, 1, 1, 3, 18, 5, ...]
     var expectedApprox =
       CFraction.FromCoeffs
         (
-         new int[]
+         new BigInteger[]
            {
              7, 2, 1, 1, 3, 18, 5, 1, 1, 6, 30, 8, 1, 1, 9, 42, 11, 1, 1, 12
            , 54, 14, 1, 1, 15, 66, 17, 1, 1, 18, 78, 20, 1, 1, 21, 90, 23, 1, 1, 24
@@ -792,7 +800,7 @@ public class CF_CF_ArithmeticTests {
     var expectedApprox =
       CFraction.FromCoeffs
         (
-         new int[]
+         new BigInteger[]
            {
              3, 1, 5, 2, 2, 1, 1, 1, 1, 1, 1, 13, 1, 1, 1, 94, 1, 9, 1, 1
            , 1, 2, 2, 3, 1, 4, 1, 7, 31, 1, 3, 1, 4, 1, 83, 15, 1, 2, 1, 3
@@ -808,7 +816,7 @@ public class CF_CF_ArithmeticTests {
     var expectedApprox =
       CFraction.FromCoeffs
         (
-         new int[]
+         new BigInteger[]
            {
              3, 1, 5, 2, 2, 1, 1, 1, 1, 1, 1, 13, 1, 1, 1, 94, 1, 9, 1, 1
            , 1, 2, 2, 3, 1, 4, 1, 7, 31, 1, 3, 1, 4, 1, 83, 15, 1, 2, 1, 3
@@ -1045,7 +1053,7 @@ public class CF_CF_ArithmeticTests {
     var expectedApprox =
       CFraction.FromCoeffs
         (
-         new int[]
+         new BigInteger[]
            {
              0, 1, 1, 9, 3, 2, 9, 2, 5, 1, 6, 2, 5, 5, 5, 2, 1, 1, 5, 24
            , 1, 12, 2, 1, 3, 1, 3, 1, 1, 15, 1, 1, 3, 1, 7, 1, 3, 1, 1, 1
@@ -1062,7 +1070,7 @@ public class CF_CF_ArithmeticTests {
     var expectedApprox =
       CFraction.FromCoeffs
         (
-         new int[]
+         new BigInteger[]
            {
              -1, 2, 9, 3, 2, 9, 2, 5, 1, 6, 2, 5, 5, 5, 2, 1, 1, 5, 24, 1
            , 12, 2, 1, 3, 1, 3, 1, 1, 15, 1, 1, 3, 1, 7, 1, 3, 1, 1, 1, 3
@@ -1096,7 +1104,7 @@ public class CF_CF_ArithmeticTests {
     var expectedApprox =
       CFraction.FromCoeffs
         (
-         new int[]
+         new BigInteger[]
            {
              1, 1, 9, 3, 2, 9, 2, 5, 1, 6, 2, 5, 5, 5, 2, 1, 1, 5, 24, 1
            , 12, 2, 1, 3, 1, 3, 1, 1, 15, 1, 1, 3, 1, 7, 1, 3, 1, 1, 1, 3
@@ -1113,7 +1121,7 @@ public class CF_CF_ArithmeticTests {
     var expectedApprox =
       CFraction.FromCoeffs
         (
-         new int[]
+         new BigInteger[]
            {
              -2, 10, 3, 2, 9, 2, 5, 1, 6, 2, 5, 5, 5, 2, 1, 1, 5, 24, 1, 12
            , 2, 1, 3, 1, 3, 1, 1, 15, 1, 1, 3, 1, 7, 1, 3, 1, 1, 1, 3, 1
@@ -1148,7 +1156,7 @@ public class CF_CF_ArithmeticTests {
     var expectedApprox =
       CFraction.FromCoeffs
         (
-         new int[]
+         new BigInteger[]
            {
              1, 1, 11, 1, 5, 4, 3, 6, 1, 4, 1, 46, 1, 20, 3, 1, 4, 1, 1, 10
            , 1, 3, 63, 1, 1, 2, 2, 2, 41, 1, 1, 7, 2, 1, 2, 1, 1, 1, 1, 2
@@ -1165,7 +1173,7 @@ public class CF_CF_ArithmeticTests {
     var expectedApprox =
       CFraction.FromCoeffs
         (
-         new int[]
+         new BigInteger[]
            {
              0, 1, 1, 11, 1, 5, 4, 3, 6, 1, 4, 1, 46, 1, 20, 3, 1, 4, 1, 1
            , 10, 1, 3, 63, 1, 1, 2, 2, 2, 41, 1, 1, 7, 2, 1, 2, 1, 1, 1, 1
