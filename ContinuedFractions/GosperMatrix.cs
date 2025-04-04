@@ -1,256 +1,356 @@
-﻿namespace ContinuedFractions;
+﻿using System.Diagnostics.CodeAnalysis;
 
-using System.Diagnostics.CodeAnalysis;
+namespace ContinuedFractions;
 
-public class GosperMatrix
-{
-    internal readonly BigInteger A, B, C, D;
-    internal readonly BigInteger E, F, G, H;
+/// <summary>
+/// Represents the state of Gosper's algorithm for binary operations on continued fractions.
+/// The matrix holds coefficients for a transformation Z(x,y) = (Axy + Bx + Cy + D) / (Exy + Fx + Gy + H),
+/// where x and y are the remaining parts of the input continued fractions.
+/// </summary>
+public class GosperMatrix {
 
-    private GosperMatrix(BigInteger a, BigInteger b, BigInteger c, BigInteger d,
-                         BigInteger e, BigInteger f, BigInteger g, BigInteger h)
-    {
-        A = a; B = b; C = c; D = d;
-        E = e; F = f; G = g; H = h;
+  /// <summary> Coefficient A of the numerator (Axy). </summary>
+  internal readonly BigInteger A;
+
+  /// <summary> Coefficient B of the numerator (Bx). </summary>
+  internal readonly BigInteger B;
+
+  /// <summary> Coefficient C of the numerator (Cy). </summary>
+  internal readonly BigInteger C;
+
+  /// <summary> Coefficient D of the numerator (D). </summary>
+  internal readonly BigInteger D;
+
+  /// <summary> Coefficient E of the denominator (Exy). </summary>
+  internal readonly BigInteger E;
+
+  /// <summary> Coefficient F of the denominator (Fx). </summary>
+  internal readonly BigInteger F;
+
+  /// <summary> Coefficient G of the denominator (Gy). </summary>
+  internal readonly BigInteger G;
+
+  /// <summary> Coefficient H of the denominator (H). </summary>
+  internal readonly BigInteger H;
+
+  /// <summary>
+  /// Initializes a new instance of the <see cref="GosperMatrix"/> class with the specified coefficients.
+  /// </summary>
+  private GosperMatrix(
+      BigInteger a
+    , BigInteger b
+    , BigInteger c
+    , BigInteger d
+    , BigInteger e
+    , BigInteger f
+    , BigInteger g
+    , BigInteger h
+    ) {
+    A = a;
+    B = b;
+    C = c;
+    D = d;
+    E = e;
+    F = f;
+    G = g;
+    H = h;
+  }
+
+  /// <summary>
+  /// Updates the matrix by consuming the next term from the first input continued fraction (x).
+  /// Replaces x with (term + 1/x').
+  /// </summary>
+  /// <param name="term">The next coefficient from the first continued fraction.</param>
+  /// <returns>A new <see cref="GosperMatrix"/> representing the updated state.</returns>
+  public GosperMatrix IngestX(BigInteger term) {
+    BigInteger nextA = A * term + C;
+    BigInteger nextB = B * term + D;
+    BigInteger nextC = A;
+    BigInteger nextD = B;
+    BigInteger nextE = E * term + G;
+    BigInteger nextF = F * term + H;
+    BigInteger nextG = E;
+    BigInteger nextH = F;
+
+    return new GosperMatrix
+      (
+       nextA
+     , nextB
+     , nextC
+     , nextD
+     , nextE
+     , nextF
+     , nextG
+     , nextH
+      );
+  }
+
+  /// <summary>
+  /// Updates the matrix by consuming the next term from the second input continued fraction (y).
+  /// Replaces y with (term + 1/y').
+  /// </summary>
+  /// <param name="term">The next coefficient from the second continued fraction.</param>
+  /// <returns>A new <see cref="GosperMatrix"/> representing the updated state.</returns>
+  public GosperMatrix IngestY(BigInteger term) {
+    BigInteger nextA = A * term + B;
+    BigInteger nextB = A;
+    BigInteger nextC = C * term + D;
+    BigInteger nextD = C;
+    BigInteger nextE = E * term + F;
+    BigInteger nextF = E;
+    BigInteger nextG = G * term + H;
+    BigInteger nextH = G;
+
+    return new GosperMatrix
+      (
+       nextA
+     , nextB
+     , nextC
+     , nextD
+     , nextE
+     , nextF
+     , nextG
+     , nextH
+      );
+  }
+
+  /// <summary>
+  /// Updates the matrix after producing an output term 'q'.
+  /// Replaces Z(x,y) with 1 / (Z(x,y) - q).
+  /// </summary>
+  /// <param name="q">The integer term produced.</param>
+  /// <returns>A new <see cref="GosperMatrix"/> representing the updated state.</returns>
+  public GosperMatrix Produce(BigInteger q) {
+    // New Numerator = Old Denominator
+    BigInteger nextA = E;
+    BigInteger nextB = F;
+    BigInteger nextC = G;
+    BigInteger nextD = H;
+    // New Denominator = Old Numerator - q * Old Denominator
+    BigInteger nextE = A - q * E;
+    BigInteger nextF = B - q * F;
+    BigInteger nextG = C - q * G;
+    BigInteger nextH = D - q * H;
+
+    return new GosperMatrix
+      (
+       nextA
+     , nextB
+     , nextC
+     , nextD
+     , nextE
+     , nextF
+     , nextG
+     , nextH
+      );
+  }
+
+
+  /// <summary>
+  /// Attempts to determine the next integer term 'q' of the resulting continued fraction.
+  /// It analyzes the limiting values of the transformation Z(x,y) = Num/Den as x and y approach infinity and 1.
+  /// If the floor of these limiting values is consistent, 'q' is determined.
+  /// </summary>
+  /// <param name="q">When this method returns <c>true</c>, contains the extracted integer term; otherwise, <see langword="null"/>.</param>
+  /// <returns><c>true</c> if the next integer term 'q' could be uniquely determined; otherwise, <c>false</c>.</returns>
+  /// <remarks>
+  /// The analysis involves calculating the function's value or limit at the corners of the domain (x,y) in {[1, inf], [1, inf]}.
+  /// Z(inf, inf) ~ A/E
+  /// Z(inf, 1)   ~ (A+B)/(E+F)
+  /// Z(1,   inf) ~ (A+C)/(E+G)
+  /// Z(1,   1)   ~ (A+B+C+D)/(E+F+G+H)
+  /// If the floor of all defined limits is the same, that floor is the next term 'q'.
+  /// Potential division by zero and sign changes in the denominator prevent determining 'q'.
+  /// </remarks>
+  public bool TryGetNextTerm([NotNullWhen(true)] out BigInteger? q) {
+    q = null;
+
+    // Calculate coefficients for Z(x+1, y+1) where x, y >= 0
+    // This shifts the analysis to the domain [0, inf] x [0, inf]
+    BigInteger ap = A;
+    BigInteger bp = A + B;
+    BigInteger cp = A + C;
+    BigInteger dp = A + B + C + D;
+
+    BigInteger ep = E;
+    BigInteger fp = E + F;
+    BigInteger gp = E + G;
+    BigInteger hp = E + F + G + H;
+
+    if (ep == 0 && fp == 0 && gp == 0 && hp == 0) {
+      return false;
     }
 
-    // --- Методы IngestX, IngestY, Produce на BigInteger ---
-    public GosperMatrix IngestX(BigInteger term)
-    {
-        BigInteger bigTerm = term;
-        BigInteger nextA = A * bigTerm + C;
-        BigInteger nextB = B * bigTerm + D;
-        BigInteger nextC = A;
-        BigInteger nextD = B;
-        BigInteger nextE = E * bigTerm + G;
-        BigInteger nextF = F * bigTerm + H;
-        BigInteger nextG = E;
-        BigInteger nextH = F;
-        return new GosperMatrix(nextA, nextB, nextC, nextD, nextE, nextF, nextG, nextH);
+    // checking signs of coefficients gives a necessary (not sufficient) condition for sign stability.
+    var denSigns = new List<int>();
+    if (ep != 0)
+      denSigns.Add(ep.Sign);
+    if (fp != 0)
+      denSigns.Add(fp.Sign);
+    if (gp != 0)
+      denSigns.Add(gp.Sign);
+    if (hp != 0)
+      denSigns.Add(hp.Sign);
+
+    bool hasPositive = denSigns.Exists(s => s > 0);
+    bool hasNegative = denSigns.Exists(s => s < 0);
+
+    if (hasPositive && hasNegative) {
+      // Mixed signs suggest potential denominator zero/sign change. Cannot safely determine q.
+      return false;
     }
 
-     public GosperMatrix IngestY(BigInteger term)
-    {
-        BigInteger bigTerm = term;
-        BigInteger nextA = A * bigTerm + B;
-        BigInteger nextB = A;
-        BigInteger nextC = C * bigTerm + D;
-        BigInteger nextD = C;
-        BigInteger nextE = E * bigTerm + F;
-        BigInteger nextF = E;
-        BigInteger nextG = G * bigTerm + H;
-        BigInteger nextH = G;
-        return new GosperMatrix(nextA, nextB, nextC, nextD, nextE, nextF, nextG, nextH);
+    BigInteger? minFloor = null;
+    BigInteger? maxFloor = null;
+
+    // Calculate floor for the four corner cases (limits/values)
+    UpdateMinMaxFloor(ap, ep); // Z(inf, inf) ~ a'/e' (Limit as x,y -> inf)
+    UpdateMinMaxFloor(bp, fp); // Z(inf, 1)   ~ b'/f' (Limit as x -> inf, y = 0)
+    UpdateMinMaxFloor(cp, gp); // Z(1,   inf) ~ c'/g' (Limit as x = 0, y -> inf)
+    UpdateMinMaxFloor(dp, hp); // Z(1,   1)   = d'/h' (Value at x = 0, y = 0)
+
+    // Helper to compute FloorDiv and update min/max floor values.
+    void UpdateMinMaxFloor(BigInteger num, BigInteger den) {
+      if (den == 0)
+        return;
+
+      int targetSign = hasPositive ? 1 : (hasNegative ? -1 : 0);
+      if (targetSign != 0 && den.Sign != 0 && den.Sign != targetSign) {
+        return;
+      }
+
+      BigInteger currentFloor = FloorDiv(num, den);
+
+      if (minFloor == null) {
+        minFloor = currentFloor;
+        maxFloor = currentFloor;
+      }
+      else {
+        if (currentFloor < minFloor)
+          minFloor = currentFloor;
+        if (currentFloor > maxFloor)
+          maxFloor = currentFloor;
+      }
     }
 
-    public GosperMatrix Produce(BigInteger q) // q теперь BigInteger
-    {
-        // Новый числитель - это старый знаменатель
-        BigInteger nextA = E;
-        BigInteger nextB = F;
-        BigInteger nextC = G;
-        BigInteger nextD = H;
-        // Новый знаменатель = Старый числитель - q * Старый знаменатель
-        BigInteger nextE = A - q * E;
-        BigInteger nextF = B - q * F;
-        BigInteger nextG = C - q * G;
-        BigInteger nextH = D - q * H;
-        return new GosperMatrix(nextA, nextB, nextC, nextD, nextE, nextF, nextG, nextH);
+    if (minFloor == null) {
+      // Could not compute any finite limit floor (e.g., all denominators were zero).
+      return false;
     }
 
-    // --- Метод TryGetNextTerm (Пункт 4) ---
+    if (minFloor == maxFloor) {
+      // All computed floors are the same. This is our term q.
+      q = minFloor;
 
-    /// <summary>
-    /// Пытается определить следующий целый член q результирующей непрерывной дроби.
-    /// Использует анализ предельных значений Z(x,y) = Num/Den при x,y >= 1
-    /// через анализ сдвинутых коэффициентов (для xx=x-1>=0, yy=y-1>=0).
-    /// </summary>
-    /// <param name="q">Найденный следующий член (если метод возвращает true).</param>
-    /// <returns>true, если следующий член q однозначно определен, иначе false.</returns>
-    public bool TryGetNextTerm([NotNullWhen(true)] out BigInteger? q)
-    {
-        q = null;
-
-        // 1. Вычисляем сдвинутые коэффициенты a', b', c', d', e', f', g', h'
-        // Numerator': a'xx*yy + b'xx + c'yy + d'
-        BigInteger ap = A;                     // a' = A
-        BigInteger bp = A + B;                 // b' = A + B
-        BigInteger cp = A + C;                 // c' = A + C
-        BigInteger dp = A + B + C + D;         // d' = A + B + C + D
-
-        // Denominator': e'xx*yy + f'xx + g'yy + h'
-        BigInteger ep = E;                     // e' = E
-        BigInteger fp = E + F;                 // f' = E + F
-        BigInteger gp = E + G;                 // g' = E + G
-        BigInteger hp = E + F + G + H;         // h' = E + F + G + H
-
-        // 2. Проверка знаменателя Den' на возможную смену знака (наивный метод)
-        if (ep == 0 && fp == 0 && gp == 0 && hp == 0)
-        {
-            // Знаменатель всегда 0.
-            // Если числитель тоже всегда 0 (ap=bp=cp=dp=0), результат 0/0 - неопределенность.
-            // Если числитель не всегда 0, результат - бесконечность.
-            // В обоих случаях мы не можем выдать конечный q.
-            return false;
-        }
-
-        // Собираем ненулевые коэффициенты знаменателя для проверки знака
-        var denSigns = new List<BigInteger>();
-        if (ep != 0) denSigns.Add(ep.Sign);
-        if (fp != 0) denSigns.Add(fp.Sign);
-        if (gp != 0) denSigns.Add(gp.Sign);
-        if (hp != 0) denSigns.Add(hp.Sign);
-
-        // Если есть и положительные, и отрицательные -> возможна смена знака -> нельзя определить q
-        bool hasPositive = false;
-        bool hasNegative = false;
-        foreach (BigInteger sign in denSigns)
-        {
-            if (sign > 0) hasPositive = true;
-            if (sign < 0) hasNegative = true;
-        }
-        if (hasPositive && hasNegative)
-        {
-            // Знаки смешанные, риск смены знака Den' -> не можем определить q
-            return false;
-        }
-        // Если все ненулевые коэффициенты одного знака (или их нет, но hp != 0), то считаем, что знак Den' постоянен.
-
-        // 3. Вычисляем предельные отношения и их floor
-        BigInteger? minFloor = null;
-        BigInteger? maxFloor = null;
-
-        // Функция для безопасного вычисления floor(N/D) и обновления min/max
-        void UpdateMinMaxFloor(BigInteger num, BigInteger den)
-        {
-            if (den == 0) return; // Пропускаем отношение, если знаменатель 0
-
-            BigInteger currentFloor = FloorDiv(num, den);
-
-            if (minFloor == null) // Первый вычисленный floor
-            {
-                minFloor = currentFloor;
-                maxFloor = currentFloor;
-            }
-            else
-            {
-                if (currentFloor < minFloor) minFloor = currentFloor;
-                if (currentFloor > maxFloor) maxFloor = currentFloor;
-            }
-        }
-
-        UpdateMinMaxFloor(ap, ep); // Z(inf, inf) ~ a'/e'
-        UpdateMinMaxFloor(bp, fp); // Z(inf, 1)   ~ b'/f'
-        UpdateMinMaxFloor(cp, gp); // Z(1,   inf) ~ c'/g'
-        UpdateMinMaxFloor(dp, hp); // Z(1,   1)   ~ d'/h'
-
-        // 4. Проверка результата
-        if (minFloor == null)
-        {
-            // Ни одного конечного отношения не вычислено (все знаменатели e',f',g',h' были 0)
-            // Это должно было отсечься проверкой ep=fp=gp=hp=0 выше. Но на всякий случай.
-             return false;
-        }
-
-        if (minFloor == maxFloor)
-        {
-            // Все конечные предельные значения имеют одинаковый floor - это наш q!
-            q = minFloor;
-            return true;
-        }
-        else
-        {
-            // floor(min Z) != floor(max Z) -> недостаточно информации, нужно запросить еще члены x или y
-            return false;
-        }
+      return true;
     }
 
-    /// <summary>
-    /// Вычисляет floor(n / d) для BigInteger.
-    /// </summary>
-    public static BigInteger FloorDiv(BigInteger n, BigInteger d)
-    {
-        if (d == 0) throw new DivideByZeroException("Attempted FloorDiv by zero.");
+    // Floors differ. Not enough information to produce a term.
+    return false;
+  }
 
-        // Проще всего работать с положительным делителем
-        if (d < 0)
-        {
-            n = -n;
-            d = -d;
-        }
+  /// <summary>
+  /// Computes the floor of the division of two <see cref="BigInteger"/> numbers (n / d).
+  /// Handles negative numbers correctly, according to the definition of floor (rounding towards negative infinity).
+  /// </summary>
+  /// <param name="n">The numerator.</param>
+  /// <param name="d">The denominator.</param>
+  /// <returns>The largest integer less than or equal to n / d.</returns>
+  /// <exception cref="DivideByZeroException">Thrown if the denominator <paramref name="d"/> is zero.</exception>
+  public static BigInteger FloorDiv(BigInteger n, BigInteger d) {
+    if (d == 0)
+      throw new DivideByZeroException("Attempted FloorDiv by zero.");
 
-        BigInteger q = BigInteger.DivRem(n, d, out BigInteger r);
+    BigInteger q = BigInteger.DivRem(n, d, out BigInteger r);
 
-        // Если остаток отрицательный, результат деления (округление к нулю)
-        // на 1 больше, чем floor. Нужно вычесть 1.
-        // (n = q*d + r, где знак r совпадает со знаком n, если r!=0) -- НЕПРАВИЛЬНО для DivRem!
-        // DivRem: n = q*d + r, где 0 <= |r| < |d|, знак r совпадает со знаком n.
-        // Пример: FloorDiv(-5, 2). n=-5, d=2. q = -2, r = -1.
-        //           Floor(-5/2) = Floor(-2.5) = -3. q= -2. r = -1.
-        //           Нужно q-1 если r < 0.
-        // Пример: FloorDiv(5, -2). n=5, d=-2 -> n=-5, d=2. q = -2, r = -1.
-        //           Floor(5/-2) = Floor(-2.5) = -3. q=-2. r=-1.
-        //           Нужно q-1 если r < 0.
-        if (r < 0)
-        {
-            return q - 1;
-        }
-
-        return q;
+    // If n and d have different signs AND there is a remainder,
+    // the division rounded towards zero (q) is higher than the floor. Subtract 1.
+    bool differentSigns = n.Sign * d.Sign == -1;
+    if (differentSigns && r != 0) {
+      return q - 1;
     }
 
-    // Начальные матрицы для операций:
-    public static GosperMatrix Addition()
-        => new GosperMatrix
-            (
-             0
-           , 1
-           , 1
-           , 0
-           , 0
-           , 0
-           , 0
-           , 1
-            ); // (0xy + 1x + 1y + 0) / (0xy + 0x + 0y + 1) = x + y
+    return q;
+  }
 
-    public static GosperMatrix Subtraction()
-        => new GosperMatrix
-            (
-             0
-           , 1
-           , -1
-           , 0
-           , 0
-           , 0
-           , 0
-           , 1
-            ); // (x - y) / 1
+  // --- Static factory methods for initial matrices ---
 
-    public static GosperMatrix Multiplication()
-        => new GosperMatrix
-            (
-             1
-           , 0
-           , 0
-           , 0
-           , 0
-           , 0
-           , 0
-           , 1
-            ); // (1xy + 0x + 0y + 0) / 1 = xy
+  /// <summary>
+  /// Gets the initial <see cref="GosperMatrix"/> for addition (x + y).
+  /// Z(x,y) = (0xy + 1x + 1y + 0) / (0xy + 0x + 0y + 1) = x + y.
+  /// </summary>
+  /// <returns>The matrix for addition.</returns>
+  public static GosperMatrix Addition()
+    => new GosperMatrix
+      (
+       0
+     , 1
+     , 1
+     , 0
+     , 0
+     , 0
+     , 0
+     , 1
+      );
 
-    public static GosperMatrix Division()
-        => new GosperMatrix
-            (
-             0
-           , 1
-           , 0
-           , 0
-           , 0
-           , 0
-           , 1
-           , 0
-            ); // (0xy + 1x + 0y + 0) / (0xy + 0x + 1y + 0) = x / y
+  /// <summary>
+  /// Gets the initial <see cref="GosperMatrix"/> for subtraction (x - y).
+  /// Z(x,y) = (0xy + 1x - 1y + 0) / (0xy + 0x + 0y + 1) = x - y.
+  /// </summary>
+  /// <returns>The matrix for subtraction.</returns>
+  public static GosperMatrix Subtraction()
+    => new GosperMatrix
+      (
+       0
+     , 1
+     , -1
+     , 0
+     , 0
+     , 0
+     , 0
+     , 1
+      );
 
-    public override string ToString() { return $"({A}xy+{B}x+{C}y+{D})/({E}xy+{F}x+{G}y+{H})"; }
+  /// <summary>
+  /// Gets the initial <see cref="GosperMatrix"/> for multiplication (x * y).
+  /// Z(x,y) = (1xy + 0x + 0y + 0) / (0xy + 0x + 0y + 1) = xy.
+  /// </summary>
+  /// <returns>The matrix for multiplication.</returns>
+  public static GosperMatrix Multiplication()
+    => new GosperMatrix
+      (
+       1
+     , 0
+     , 0
+     , 0
+     , 0
+     , 0
+     , 0
+     , 1
+      );
+
+  /// <summary>
+  /// Gets the initial <see cref="GosperMatrix"/> for division (x / y).
+  /// Z(x,y) = (0xy + 1x + 0y + 0) / (0xy + 0x + 1y + 0) = x / y.
+  /// </summary>
+  /// <returns>The matrix for division.</returns>
+  public static GosperMatrix Division()
+    => new GosperMatrix
+      (
+       0
+     , 1
+     , 0
+     , 0
+     , 0
+     , 0
+     , 1
+     , 0
+      );
+
+  /// <summary>
+  /// Returns a string representation of the transformation Z(x,y).
+  /// </summary>
+  /// <returns>A string in the format "(Axy+Bx+Cy+D)/(Exy+Fx+Gy+H)".</returns>
+  public override string ToString() { return $"({A}xy+{B}x+{C}y+{D})/({E}xy+{F}x+{G}y+{H})"; }
+
 }
