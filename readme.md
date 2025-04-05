@@ -62,29 +62,24 @@ Currently, the library is not available on NuGet. To use it in your project:
 ## Key Concepts and Implementation Details
 
 * **Arbitrary Precision Coefficients:** Uses `System.Numerics.BigInteger` for coefficients (`a_i`), allowing arbitrary precision for individual terms.
-* **Exact Arithmetic (Intermediate Steps):** Internal calculations within arithmetic algorithms (Gosper's, LFTs) use `BigInteger`, ensuring these steps are exact.
+* **Exact Arithmetic:** Internal calculations within arithmetic algorithms use `BigInteger`, ensuring these steps are exact.
 * **Lazy Evaluation and Caching:** Coefficients from generators (`CFraction.FromGenerator`) are computed on demand and cached.
-* **Canonical Form:** Finite fractions ending in `[..., a, 1]` are automatically stored as `[..., a+1]`.
+* **Canonical Form:** Finite fractions ending in `[..., a, 1]` are automatically stored as `[..., a+1]` (except `[1]`).
 * **Limited Precision for Comparisons and Output:**
-    * Value comparisons (`==`, `<`, etc.), `GetHashCode()`, `ToString()`, conversion are limited by `numberOfCoeffs` (default: 40).
-    * Two fractions differing only after this limit may compare as equal.
-    * This balances precision with practical performance for potentially infinite sequences.
+    * Value comparisons (`==`, `<`, etc.), `GetHashCode()`, `ToString()` are limited by `numberOfCoeffs` (default: 40).
+    * Two fractions differing only after this limit compares as equal.
 * **Infinity Handling:**
-    * `CFraction.Infinity` represents positive infinity (`[]`).
+    * `CFraction.Infinity` represents infinity `[]` with no sign.
     * Arithmetic handles `Infinity` appropriately (e.g., `X + Infinity = Infinity`, `X / Infinity = 0`).
-    * Checks for infinity use structural equality (`Equals`), correctly identifying any instance with no coefficients.
-* **No Negative Infinity:** No distinct representation for negative infinity. Results like `X - Infinity` might return `CFraction.Infinity`.
+* **No Negative Infinity:** No distinct representation for negative infinity. Results like `X - Infinity` will return `CFraction.Infinity`.
 
 ## Limitations
 
 * **Comparison Precision Limit:** As mentioned above, comparisons (`==`, `<`, etc.) are fundamentally limited by `numberOfCoeffs`. They test for equality *of the first `numberOfCoeffs` coefficients* (considering the alternating sign logic), not true numerical equality up to infinite precision.
 * **(Fundamental) Result Representation vs. Mathematical Identity:**
-    * Arithmetic operations compute the *continued fraction representation* of the result. This representation, even if mathematically correct, might not be the *simplest possible form* or the form expected from direct calculation.
     * **Example:** Mathematically, `Sqrt2 * Sqrt2` equals `2`. The library represents `Sqrt2` as `[1; 2, 2, 2, ...]`. When multiplying these two sequences using Gosper's algorithm, the result can't be obtained in finite time.
     * **Consequence:** Comparing the *result object* `CFraction.Sqrt2 * CFraction.Sqrt2` directly with `CFraction.FromCoeffs(new[]{2})` using `==` will return `false`.
-    * But the expression: `(double)(Sqrt2 * Sqrt2) == 2` will return `true`.
-* **Performance and Convergence:**
-    * Gosper's algorithm can be complex. For some inputs, it might require consuming many coefficients from the input fractions before producing an output coefficient.
+    * But the expression: `(double)(Sqrt2 * Sqrt2) == 2.0` will return `true`, because any arithmetic operation is as precise as double.
     * A safety fuse (`MAX_CONSUME_WITHOUT_PRODUCE`) is implemented to prevent potential infinite loops in cases of extremely slow convergence or potential issues, terminating the generation with a rational approximation. This is a heuristic and might truncate results in rare valid cases that converge very slowly.
 
 ## Usage Examples
@@ -164,6 +159,23 @@ Console.WriteLine($"Phi as double: {phiValue}"); // Output: ~1.618033988...
 
 ```
 
+For more examples covering various arithmetic operations, edge cases, and usage of different factory methods, please refer to the unit tests located in the `Tests` directory of the repository.
+
+## References
+
+Here are some resources related to the algorithms and concepts used in this library:
+
+* **Gosper's Algorithm for Continued Fraction Arithmetic:**
+  An explanation of the algorithm used for binary operations (`+`, `-`, `*`, `/`) between `CFraction` instances and many other things.
+    * [Bill Gosper's Original Notes](https://perl.plover.com/classes/cftalk/INFO/gosper.html)
+
+* **Clear Explanation of Continued Fraction Algorithms:**
+  A straightforward explanation of algorithms for continued fraction arithmetic.
+    * [Hsin Yao's Notes on Continued Fractions](https://hsinhaoyu.github.io/cont_frac/)
+
+* **Haskell Implementation and Article:**
+  A related implementation in Haskell. Author provides an nice article discussing continued fraction arithmetic, the challenges of naive implementations (like potential infinity loops), and possible approaches to address them.
+    * [mjcollins10/ContinuedFractions](https://github.com/mjcollins10/ContinuedFractions)
 
 ## License
 
