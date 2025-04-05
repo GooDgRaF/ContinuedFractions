@@ -95,14 +95,14 @@ using System.Numerics;
 // From a rational number (355 / 113)
 var piApprox = CFraction.FromRational(355, 113);
 // Output: [3; 7, 16]
-Console.WriteLine($"Pi Approximation: {piApprox}");
+Console.WriteLine($"Pi Approximation: {piApprox}\n");
 
 // From a list of coefficients (Golden Ratio)
 var phi = CFraction.FromCoeffs(new BigInteger[] { 1, 1, 1, 1, 1, 1, 1, 1 }); // Finite approximation
 // Or using the infinite generator pattern for the true Golden Ratio
 var phiInfinite = CFraction.FromGenerator(GeneratePhi());
 // Output: [1; 1, 1, 1, 1, 1, 1, 1, ...] (limited by numberOfCoeffs for display)
-Console.WriteLine($"Golden Ratio (approx): {phiInfinite}");
+Console.WriteLine($"Golden Ratio: {phiInfinite}\n");
 
 // Generator for Phi
 IEnumerable<BigInteger> GeneratePhi() {
@@ -116,31 +116,29 @@ IEnumerable<BigInteger> GeneratePhi() {
 var sqrt2 = CFraction.Sqrt2;
 // Output: [1; 2, 2, 2, 2, ...]
 Console.WriteLine($"Square Root of 2: {sqrt2}");
+// Get coefficients using indexer (lazy evaluation triggers if needed)
+Console.WriteLine($"Third coefficient of Sqrt(2): {CFraction.Sqrt2[2]}\n"); // Output: 2
 
 
 // Add two fractions
 var resultAdd = CFraction.One + piApprox;
 // Output: [4; 7, 16] (Result of 1 + [3; 7, 16])
-Console.WriteLine($"1 + Pi Approx: {resultAdd}");
+Console.WriteLine($"1 + Pi Approx: {resultAdd}\n");
 
 // Multiply Sqrt2 by itself
 // Note: The result sequence converges to 2, but might not be exactly [2]
 var sqrt2Squared = CFraction.Sqrt2 * CFraction.Sqrt2;
-// Output might be something like: [1; 1, 3, 1, 5, ...] or [2] depending on internal algorithm steps
+// Output might be something like: [1;1,138047935912779337726843716653857327224] depending on MAX_CONSUME_WITHOUT_PRODUCE constant
 Console.WriteLine($"Sqrt(2) * Sqrt(2) = {sqrt2Squared}");
 
 // Verify the numerical value using double conversion
-Console.WriteLine($"(double)(Sqrt(2) * Sqrt(2)) = {(double)sqrt2Squared}"); // Should be close to 2.0
+Console.WriteLine($"(double)(Sqrt(2) * Sqrt(2)) = {(double)sqrt2Squared}\n"); // Should be 2.0
 
-// Work with BigIntegers
-var five = new BigInteger(5);
+// Work with integers
+int five = 5;
 var resultDiv = five / CFraction.One; // 5 / [1]
 // Output: [5]
-Console.WriteLine($"5 / 1 = {resultDiv}");
-
-
-// Get coefficients using indexer (lazy evaluation triggers if needed)
-Console.WriteLine($"Third coefficient of Sqrt(2): {CFraction.Sqrt2[2]}"); // Output: 2
+Console.WriteLine($"5 / 1 = {resultDiv}\n");
 
 // Get convergents
 Console.WriteLine("Convergents of Pi Approximation:");
@@ -155,8 +153,7 @@ foreach (var convergent in piApprox.GenerateConvergents())
 
 // Get approximate double value
 double phiValue = (double)phiInfinite;
-Console.WriteLine($"Phi as double: {phiValue}"); // Output: ~1.618033988...
-
+Console.WriteLine($"Phi as double: {phiValue}"); // Output: 1.618033988749895
 ```
 
 For more examples covering various arithmetic operations, edge cases, and usage of different factory methods, please refer to the unit tests located in the `Tests` directory of the repository.
