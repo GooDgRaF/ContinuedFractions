@@ -40,7 +40,7 @@ Currently, the library is not available on NuGet. To use it in your project:
     * Download the source code as a ZIP archive from the GitHub repository page and extract it.
     * Alternatively, clone the repository using Git:
       ```bash
-      git clone https://github.com/YOUR_USERNAME/ContinuedFractions.NET.git
+      git https://github.com/GooDgRaF/ContinuedFractions.git
       ```
 2. **Build the Library:**
     * Open the solution file `ContinuedFractions.sln` in IDE and build the `ContinuedFractions` project (usually in Release mode).
@@ -85,8 +85,6 @@ Currently, the library is not available on NuGet. To use it in your project:
 ## Usage Examples
 
 Here are a few basic examples to get you started.
-
-**1. Creating Continued Fractions:**
 
 ```csharp
 using ContinuedFractions;
