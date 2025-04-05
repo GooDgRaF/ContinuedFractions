@@ -172,6 +172,12 @@ Here are some resources related to the algorithms and concepts used in this libr
   A related implementation in Haskell. Author provides an nice article discussing continued fraction arithmetic, the challenges of naive implementations (like potential infinity loops), and possible approaches to address them.
     * [mjcollins10/ContinuedFractions](https://github.com/mjcollins10/ContinuedFractions)
 
+
+## Future plans (some day)
+
+* sqrt
+* solving quadratic equations
+
 ## License
 
 This project is licensed under the **MIT License**.
